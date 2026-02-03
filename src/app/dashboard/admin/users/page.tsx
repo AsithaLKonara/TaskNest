@@ -16,12 +16,14 @@ export default function AdminUsersPage() {
     useEffect(() => {
         async function fetchUsers() {
             try {
-                const q = query(collection(db, "users"), orderBy("createdAt", "desc"))
+                const q = query(collection(db, "users"))
                 const querySnapshot = await getDocs(q)
                 const fetchedUsers = querySnapshot.docs.map(doc => ({
                     uid: doc.id,
                     ...doc.data()
                 })) as User[]
+                // Sort client-side to avoid missing index error in production
+                fetchedUsers.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
                 setUsers(fetchedUsers)
             } catch (error) {
                 console.error("Error fetching users:", error)
