@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Order } from "@/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { toast } from "sonner"
 
 export default function AdminPaymentsPage() {
     const [orders, setOrders] = useState<Order[]>([])
@@ -75,8 +76,24 @@ export default function AdminPaymentsPage() {
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    {order.paymentProofUrl && order.status !== 'completed' && (
-                                        <Button size="sm" variant="outline">Mark Verified</Button>
+                                    {order.paymentProofUrl && order.status !== 'completed' && order.status !== 'in-progress' && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={async () => {
+                                                if (!confirm("Confirm payment verification?")) return
+                                                try {
+                                                    const docRef = doc(db, "orders", order.orderId)
+                                                    await updateDoc(docRef, { status: 'in-progress' })
+                                                    setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'in-progress' } : o))
+                                                    toast.success("Payment verified. Order in progress.")
+                                                } catch (e) {
+                                                    toast.error("Failed to verify payment")
+                                                }
+                                            }}
+                                        >
+                                            Mark Verified
+                                        </Button>
                                     )}
                                 </TableCell>
                             </TableRow>
@@ -84,6 +101,6 @@ export default function AdminPaymentsPage() {
                     </TableBody>
                 </Table>
             </div>
-        </div>
+        </div >
     )
 }

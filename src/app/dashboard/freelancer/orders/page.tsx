@@ -10,11 +10,20 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, Upload } from "lucide-react"
 import { format } from "date-fns"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { FileUpload } from "@/components/dashboard/file-upload"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+import { doc, updateDoc } from "firebase/firestore"
 
 export default function OrdersPage() {
     const { user } = useAuth()
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
+    const [deliveringOrderId, setDeliveringOrderId] = useState<string | null>(null)
+    const [deliveryFiles, setDeliveryFiles] = useState<string[]>([])
+    const [deliveryComment, setDeliveryComment] = useState("")
+    const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
         async function fetchOrders() {
@@ -40,6 +49,40 @@ export default function OrdersPage() {
         }
         fetchOrders()
     }, [user])
+
+    const handleDeliverWork = async () => {
+        if (!deliveringOrderId) return
+        if (deliveryFiles.length === 0) {
+            toast.error("Please upload at least one file.")
+            return
+        }
+
+        setSubmitting(true)
+        try {
+            const orderRef = doc(db, "orders", deliveringOrderId)
+            await updateDoc(orderRef, {
+                status: 'delivered',
+                deliveryUrl: deliveryFiles[0], // MVP: Single file or first file
+                deliveryComment: deliveryComment
+            })
+
+            setOrders(prev => prev.map(o =>
+                o.orderId === deliveringOrderId
+                    ? { ...o, status: 'delivered', deliveryUrl: deliveryFiles[0], deliveryComment }
+                    : o
+            ))
+
+            toast.success("Work delivered successfully!")
+            setDeliveringOrderId(null)
+            setDeliveryFiles([])
+            setDeliveryComment("")
+        } catch (error) {
+            console.error("Error delivering work:", error)
+            toast.error("Failed to deliver work")
+        } finally {
+            setSubmitting(false)
+        }
+    }
 
     if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
 
@@ -83,10 +126,54 @@ export default function OrdersPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {order.status === 'active' && (
-                                            <Button size="sm" variant="secondary">
-                                                <Upload className="mr-2 h-3 w-3" /> Deliver Work
-                                            </Button>
+                                        {(order.status === 'active' || order.status === 'in-progress') && (
+                                            <Dialog open={deliveringOrderId === order.orderId} onOpenChange={(open) => {
+                                                if (!open) setDeliveringOrderId(null)
+                                                else setDeliveringOrderId(order.orderId)
+                                            }}>
+                                                <DialogTrigger asChild>
+                                                    <Button size="sm" variant="default">
+                                                        <Upload className="mr-2 h-3 w-3" /> Deliver Work
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-md">
+                                                    <DialogHeader>
+                                                        <DialogTitle>Deliver Work</DialogTitle>
+                                                        <DialogDescription>
+                                                            Upload your finished work files for the client to review.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="space-y-4 py-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-medium">Delivery Files</label>
+                                                            <FileUpload
+                                                                folder={`deliveries/${order.orderId}`}
+                                                                value={deliveryFiles}
+                                                                onChange={setDeliveryFiles}
+                                                                maxFiles={5}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-sm font-medium">Message (Optional)</label>
+                                                            <Textarea
+                                                                placeholder="Describe the work you are delivering..."
+                                                                value={deliveryComment}
+                                                                onChange={(e) => setDeliveryComment(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <DialogFooter>
+                                                        <Button variant="outline" onClick={() => setDeliveringOrderId(null)}>Cancel</Button>
+                                                        <Button onClick={handleDeliverWork} disabled={submitting || deliveryFiles.length === 0}>
+                                                            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                            Submit Delivery
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
+                                        )}
+                                        {order.status === 'delivered' && (
+                                            <Badge variant="secondary">In Review</Badge>
                                         )}
                                     </TableCell>
                                 </TableRow>

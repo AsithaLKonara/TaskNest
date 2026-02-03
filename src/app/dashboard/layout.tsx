@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect } from "react"
-import { Loader2, LogOut, LayoutDashboard, Briefcase, FileText, MessageSquare, CreditCard, Users, ShieldAlert, Cog, Building } from "lucide-react"
+import { Loader2, LogOut, LayoutDashboard, Briefcase, FileText, MessageSquare, CreditCard, Users, ShieldAlert, Cog, Building, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -40,6 +40,7 @@ export default function DashboardLayout({
         { name: "Browse Jobs", href: "/jobs", icon: Briefcase },
         { name: "Proposals", href: "/dashboard/freelancer/proposals", icon: FileText },
         { name: "Orders", href: "/dashboard/freelancer/orders", icon: CreditCard },
+        { name: "My Reviews", href: "/dashboard/freelancer/reviews", icon: Star },
         { name: "Settings", href: "/dashboard/settings", icon: Cog },
     ]
 
@@ -48,6 +49,7 @@ export default function DashboardLayout({
         { name: "Post Job", href: "/dashboard/client/post-job", icon: Briefcase },
         { name: "My Jobs", href: "/dashboard/client/jobs", icon: FileText },
         { name: "Orders", href: "/dashboard/client/orders", icon: CreditCard },
+        { name: "My Reviews", href: "/dashboard/client/reviews", icon: Star },
         { name: "Company Profile", href: "/dashboard/client/profile", icon: Building },
         { name: "Settings", href: "/dashboard/settings", icon: Cog },
     ]

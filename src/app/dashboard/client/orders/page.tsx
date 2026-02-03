@@ -8,17 +8,20 @@ import { Order } from "@/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, Upload, CheckCircle } from "lucide-react"
+import { Loader2, Upload, CheckCircle, ExternalLink, MessageSquare, Check } from "lucide-react"
 import { format } from "date-fns"
 import { FileUpload } from "@/components/dashboard/file-upload"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { ReviewModal } from "@/components/reviews/review-modal"
+import Link from "next/link"
 
 export default function ClientOrdersPage() {
     const { user } = useAuth()
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
-    const [uploading, setUploading] = useState(false)
+    const [reviewOrder, setReviewOrder] = useState<Order | null>(null)
+    const [viewingDelivery, setViewingDelivery] = useState<Order | null>(null)
 
     useEffect(() => {
         async function fetchOrders() {
@@ -42,22 +45,53 @@ export default function ClientOrdersPage() {
     }, [user])
 
     const handlePaymentUpload = async (orderId: string, url: string) => {
-        setUploading(true)
         try {
             const orderRef = doc(db, "orders", orderId)
             await updateDoc(orderRef, {
                 paymentProofUrl: url,
-                status: 'active' // Assuming 'active' means paid/in-progress vs 'pending_payment'
-                // For now, let's just save the proof.
+                status: 'active'
             })
             setOrders(prev => prev.map(o => o.orderId === orderId ? { ...o, paymentProofUrl: url } : o))
             toast.success("Payment proof uploaded")
         } catch (error) {
             console.error("Error updating order:", error)
             toast.error("Failed to update order")
-        } finally {
-            setUploading(false)
-            // Close dialog logic driven by state if needed, or let user close
+        }
+    }
+
+    const handleApproveDelivery = async (order: Order) => {
+        if (!confirm("Are you sure you want to approve this delivery? This will release funds to the freelancer.")) return
+
+        try {
+            const orderRef = doc(db, "orders", order.orderId)
+            await updateDoc(orderRef, {
+                status: 'completed'
+            })
+            setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'completed' } : o))
+            toast.success("Delivery approved!")
+            setViewingDelivery(null)
+            setReviewOrder(order)
+        } catch (error) {
+            console.error("Error approving delivery:", error)
+            toast.error("Failed to approve delivery")
+        }
+    }
+
+    const handleRequestRevision = async (order: Order) => {
+        const reason = prompt("Please provide a reason for the revision request:")
+        if (!reason) return
+
+        try {
+            const orderRef = doc(db, "orders", order.orderId)
+            await updateDoc(orderRef, {
+                status: 'in-progress',
+            })
+            setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'in-progress' } : o))
+            toast.success("Revision requested")
+            setViewingDelivery(null)
+        } catch (error) {
+            console.error("Error requesting revision:", error)
+            toast.error("Failed to request revision")
         }
     }
 
@@ -78,7 +112,7 @@ export default function ClientOrdersPage() {
                             <TableHead>Freelancer</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>Payment</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -97,12 +131,9 @@ export default function ClientOrdersPage() {
                                             {order.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>
-                                        {order.paymentProofUrl ? (
-                                            <div className="flex items-center text-green-600 gap-1 text-sm">
-                                                <CheckCircle className="h-4 w-4" /> Proof Sent
-                                            </div>
-                                        ) : (
+                                    <TableCell className="text-right">
+                                        {/* Payment Upload Logic */}
+                                        {!order.paymentProofUrl && order.status === 'active' && (
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button size="sm" variant="outline" className="gap-2">
@@ -117,9 +148,7 @@ export default function ClientOrdersPage() {
                                                         <FileUpload
                                                             folder={`payments/${order.orderId}`}
                                                             onChange={(urls) => {
-                                                                if (urls.length > 0) {
-                                                                    handlePaymentUpload(order.orderId, urls[urls.length - 1])
-                                                                }
+                                                                if (urls.length > 0) handlePaymentUpload(order.orderId, urls[0])
                                                             }}
                                                             maxFiles={1}
                                                             value={[]}
@@ -128,6 +157,67 @@ export default function ClientOrdersPage() {
                                                 </DialogContent>
                                             </Dialog>
                                         )}
+                                        {order.paymentProofUrl && order.status !== 'delivered' && order.status !== 'completed' && (
+                                            <div className="flex items-center justify-end text-green-600 gap-1 text-sm">
+                                                <CheckCircle className="h-4 w-4" /> Proof Sent
+                                            </div>
+                                        )}
+
+                                        {/* Delivery Review Logic */}
+                                        {order.status === 'delivered' && (
+                                            <Dialog open={viewingDelivery?.orderId === order.orderId} onOpenChange={(open) => open ? setViewingDelivery(order) : setViewingDelivery(null)}>
+                                                <DialogTrigger asChild>
+                                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                                                        <CheckCircle className="mr-2 h-3 w-3" /> Review Delivery
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <DialogHeader>
+                                                        <DialogTitle>Review Delivery</DialogTitle>
+                                                    </DialogHeader>
+                                                    <div className="space-y-4 py-4">
+                                                        <div className="p-4 border rounded-lg bg-muted/50">
+                                                            <h4 className="font-medium mb-2">Delivery Files</h4>
+                                                            {order.deliveryUrl ? (
+                                                                <Link href={order.deliveryUrl} target="_blank" className="text-blue-600 hover:underline flex items-center gap-2">
+                                                                    <ExternalLink className="h-4 w-4" /> View Submitted Work
+                                                                </Link>
+                                                            ) : (
+                                                                <span className="text-muted-foreground">No files linked.</span>
+                                                            )}
+                                                            {order.deliveryComment && (
+                                                                <div className="mt-3">
+                                                                    <h4 className="font-medium text-sm mb-1">Freelancer Message</h4>
+                                                                    <p className="text-sm text-muted-foreground">{order.deliveryComment}</p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex gap-3 pt-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
+                                                                onClick={() => handleRequestRevision(order)}
+                                                            >
+                                                                <MessageSquare className="mr-2 h-4 w-4" /> Request Revision
+                                                            </Button>
+                                                            <Button
+                                                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                                                onClick={() => handleApproveDelivery(order)}
+                                                            >
+                                                                <Check className="mr-2 h-4 w-4" /> Approve & Pay
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </DialogContent>
+                                            </Dialog>
+                                        )}
+
+                                        {/* Completed Status */}
+                                        {order.status === 'completed' && (
+                                            <Badge variant="outline" className="text-green-600 border-green-200">
+                                                Completed
+                                            </Badge>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -135,6 +225,15 @@ export default function ClientOrdersPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            {reviewOrder && (
+                <ReviewModal
+                    isOpen={!!reviewOrder}
+                    onClose={() => setReviewOrder(null)}
+                    order={reviewOrder}
+                    onReviewSubmitted={() => setReviewOrder(null)}
+                />
+            )}
         </div>
     )
 }
