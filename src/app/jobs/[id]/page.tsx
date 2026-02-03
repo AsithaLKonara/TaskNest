@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Calendar, DollarSign, Clock, MapPin, Send } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
+import { SubmitProposalDialog } from "@/components/jobs/submit-proposal-dialog"
 
 export default function JobDetailsPage() {
     const params = useParams()
@@ -112,21 +113,24 @@ export default function JobDetailsPage() {
                 <div className="space-y-6">
                     <Card className="border-2 border-primary/10 shadow-lg">
                         <CardHeader>
-                            <Button
-                                size="lg"
-                                className="w-full text-lg font-semibold shadow-md gap-2"
-                                disabled={role === 'client' || startingChat}
-                                onClick={role === 'client' ? undefined : handleMessageClient}
-                            >
-                                {startingChat ? <Loader2 className="animate-spin" /> : <Send className="h-4 w-4" />}
-                                {role === 'client' ? "Client View" : "Message Client"}
-                            </Button>
+                            {role === 'freelancer' && user ? (
+                                <SubmitProposalDialog job={job} />
+                            ) : role === 'client' ? (
+                                <Button size="lg" className="w-full" asChild>
+                                    <Link href={`/dashboard/client/jobs/${job.jobId}`}>Manage Job</Link>
+                                </Button>
+                            ) : (
+                                <Button size="lg" className="w-full" asChild>
+                                    <Link href="/login">Log in to Apply</Link>
+                                </Button>
+                            )}
+
                             {user && role === 'freelancer' && (
                                 <p className="text-xs text-center text-muted-foreground mt-2">Connects Required: 2</p>
                             )}
                             {!user && (
                                 <p className="text-xs text-center text-muted-foreground mt-2">
-                                    <Link href="/login" className="underline text-primary">Log in</Link> to submit a proposal.
+                                    Join TaskNest to apply for this job.
                                 </p>
                             )}
                         </CardHeader>
