@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { createNotification } from "@/lib/notifications"
 import { Job } from "@/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -67,6 +68,15 @@ export function SubmitProposalDialog({ job }: SubmitProposalDialogProps) {
                 status: "pending",
                 createdAt: serverTimestamp(),
             })
+
+            // Notify Client
+            await createNotification(
+                job.clientId,
+                "New Proposal",
+                `${user.displayName} sent a proposal for "${job.title}"`,
+                "info",
+                `/dashboard/client/jobs/${job.jobId}`
+            )
 
             toast.success("Proposal submitted successfully!")
             setOpen(false)

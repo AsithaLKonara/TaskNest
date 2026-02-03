@@ -36,6 +36,7 @@ export interface Job {
     category: string;
     budget: number;
     deadline: number; // Timestamp or date string
+    skills?: string[]; // Added for searching
     status: JobStatus;
     createdAt: number;
 }
@@ -103,5 +104,16 @@ export interface Review {
     targetId: string; // Freelancer
     rating: number; // 1-5
     comment: string;
+    createdAt: number;
+}
+
+export interface Notification {
+    id: string;
+    userId: string; // Recipient
+    type: 'info' | 'success' | 'warning' | 'error';
+    title: string;
+    message: string;
+    link?: string;
+    read: boolean;
     createdAt: number;
 }

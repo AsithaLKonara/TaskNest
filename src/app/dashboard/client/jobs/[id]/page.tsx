@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { createNotification } from "@/lib/notifications"
 import { Job, Proposal } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
@@ -87,6 +88,15 @@ export default function ClientJobDetailsPage() {
                 // 4. (Optional) Reject others - simpler to just leave them pending or mark rejected in batch
                 // For now, we just mark the winner.
             })
+
+            // Notify Freelancer
+            await createNotification(
+                proposal.freelancerId,
+                "Proposal Accepted",
+                `Your proposal for "${job.title}" has been accepted!`,
+                "success",
+                "/dashboard/freelancer/orders"
+            )
 
             toast.success("Proposal accepted! Order created.")
             router.push("/dashboard/client/orders")
