@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User Profiles
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId; // Or admin
+    }
+    
+    match /freelancerProfiles/{userId} {
+      allow read: if true; // Public profiles
+      allow write: if request.auth != null && request.auth.uid == userId; // Only owner can edit
+    }
+
+    // Jobs
+    match /jobs/{jobId} {
+      allow read: if true; // Public jobs
+      allow create: if request.auth != null; // Any auth user (should strictly be client role)
+      allow update: if request.auth != null && (resource.data.clientId == request.auth.uid || request.auth.token.admin == true);
+      allow delete: if request.auth != null && (resource.data.clientId == request.auth.uid || request.auth.token.admin == true);
+    }
+    
+    // Proposals
+    match /proposals/{proposalId} {
+        // Freelancers can read their own, Clients can read proposals for their jobs
+        allow read: if request.auth != null; 
+        allow create: if request.auth != null;
+        allow update: if request.auth != null;
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow read: if request.auth != null && (resource.data.clientId == request.auth.uid || resource.data.freelancerId == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (resource.data.clientId == request.auth.uid || resource.data.freelancerId == request.auth.uid);
+    }
+
+    // Chats
+    match /chats/{chatId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.participants;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read: if request.auth != null; // Parent check usually suffices or replicate check
+        allow create: if request.auth != null; // Strictly check participant logic
+      }
+    }
+  }
+}

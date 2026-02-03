@@ -76,6 +76,23 @@ export interface Message {
     timestamp: number;
 }
 
+export interface Chat {
+    chatId: string;
+    participants: string[]; // [adminId, userId] or [freelancerId, clientId]
+    participantData: {
+        [userId: string]: {
+            displayName: string;
+            photoURL?: string;
+        }
+    };
+    lastMessage?: {
+        text: string;
+        senderId: string;
+        timestamp: number;
+    };
+    updatedAt: number;
+}
+
 export interface Review {
     reviewId: string;
     orderId: string;
