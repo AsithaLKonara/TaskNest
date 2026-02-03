@@ -74,9 +74,11 @@ export default function MyProposalsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">My Proposals</h1>
-                <p className="text-muted-foreground">Track the status of your sent proposals.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">My Proposals</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">Track the status of your sent proposals.</p>
+                </div>
             </div>
 
             <div className="grid gap-4">

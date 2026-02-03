@@ -54,8 +54,13 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-8">Account Settings</h1>
+        <div className="max-w-4xl mx-auto py-4 md:py-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Account Settings</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">Manage your account preferences and security.</p>
+                </div>
+            </div>
 
             <Tabs defaultValue="account" className="space-y-6">
                 <TabsList>

@@ -11,61 +11,69 @@ export default function AdminDashboardPage() {
                 <p className="text-muted-foreground">Platform overview and management.</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Users</CardTitle>
+                        <Users className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">120</div>
-                        <p className="text-xs text-muted-foreground">+12% from last month</p>
+                        <div className="text-3xl font-bold">120</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            <span className="text-green-500 font-medium">+12%</span> from last month
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Jobs</CardTitle>
+                        <Briefcase className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">45</div>
-                        <p className="text-xs text-muted-foreground">+5 new jobs today</p>
+                        <div className="text-3xl font-bold">45</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            <span className="text-green-500 font-medium">+5</span> new jobs today
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Verification</CardTitle>
-                        <FileCheck className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Pending Verification</CardTitle>
+                        <FileCheck className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">8</div>
-                        <p className="text-xs text-muted-foreground">Freelancers awaiting review</p>
+                        <div className="text-3xl font-bold">8</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Freelancers awaiting review
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Revenue</CardTitle>
+                        <DollarSign className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">$12,450</div>
-                        <p className="text-xs text-muted-foreground">+8% from last month</p>
+                        <div className="text-3xl font-bold">$12,450</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            <span className="text-green-500 font-medium">+8%</span> from last month
+                        </p>
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+                <Card className="lg:col-span-4">
                     <CardHeader>
                         <CardTitle>Recent Activity</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground italic">
                             Activity log coming soon.
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="col-span-3">
+                <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>System Health</CardTitle>
                     </CardHeader>

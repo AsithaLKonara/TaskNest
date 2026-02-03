@@ -40,9 +40,11 @@ export default function AdminUsersPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-                <p className="text-muted-foreground">List of all registered users on the platform.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">User Management</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">Monitor and manage platform users.</p>
+                </div>
             </div>
 
             <div className="border rounded-md bg-card">

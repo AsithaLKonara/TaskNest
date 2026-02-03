@@ -105,22 +105,24 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto py-6">
-            <div className="flex items-center justify-between mb-8">
+        <div className="max-w-4xl mx-auto py-4 md:py-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Edit Profile</h1>
-                    <p className="text-muted-foreground">Manage your public appearance and rates.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Edit Profile</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">Manage your public appearance and rates.</p>
                 </div>
-                <Button onClick={form.handleSubmit(onSubmit)} disabled={saving}>
-                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    <Save className="mr-2 h-4 w-4" /> Save Changes
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button onClick={form.handleSubmit(onSubmit)} className="w-full sm:w-auto" disabled={saving}>
+                        {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Changes
+                    </Button>
+                </div>
             </div>
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-                    <div className="grid gap-6 border p-6 rounded-xl bg-card shadow-sm">
+                    <div className="grid gap-6 border p-4 md:p-6 rounded-xl bg-card shadow-sm transition-all hover:shadow-md">
                         <h2 className="text-xl font-semibold">Basic Info</h2>
                         <FormField
                             control={form.control}
@@ -155,7 +157,7 @@ export default function ProfilePage() {
                         />
                     </div>
 
-                    <div className="grid gap-6 border p-6 rounded-xl bg-card shadow-sm">
+                    <div className="grid gap-6 border p-4 md:p-6 rounded-xl bg-card shadow-sm transition-all hover:shadow-md">
                         <h2 className="text-xl font-semibold">Skills & Experience</h2>
                         <FormField
                             control={form.control}
@@ -206,7 +208,7 @@ export default function ProfilePage() {
                         />
                     </div>
 
-                    <div className="grid gap-6 border p-6 rounded-xl bg-card shadow-sm">
+                    <div className="grid gap-6 border p-4 md:p-6 rounded-xl bg-card shadow-sm transition-all hover:shadow-md">
                         <h2 className="text-xl font-semibold">Portfolio & Verification</h2>
                         <FormField
                             control={form.control}

@@ -72,7 +72,7 @@ export default function ClientJobDetailsPage() {
                     clientId: job.clientId,
                     freelancerId: proposal.freelancerId,
                     price: proposal.quote,
-                    status: "active",
+                    status: "awaiting_payment", // Changed from 'active'
                     paymentProofUrl: null,
                     createdAt: serverTimestamp()
                 })
@@ -84,21 +84,22 @@ export default function ClientJobDetailsPage() {
                 // 3. Update Proposal Status
                 const proposalRef = doc(db, "proposals", proposal.proposalId)
                 transaction.update(proposalRef, { status: "accepted" })
-
-                // 4. (Optional) Reject others - simpler to just leave them pending or mark rejected in batch
-                // For now, we just mark the winner.
             })
 
-            // Notify Freelancer
+            // Notify Freelancer (Wait for payment?)
+            // User rules: "Freelancer is notified only when Order becomes `active`" (Step 2.3.5 in docs)
+            // So we DO NOT notify Freelancer yet? 
+            // OR we notify them "Proposal Accepted (Pending Payment)".
+            // Let's notify them that they were CHOSEN, but work hasn't started.
             await createNotification(
                 proposal.freelancerId,
                 "Proposal Accepted",
-                `Your proposal for "${job.title}" has been accepted!`,
-                "success",
+                `Your proposal for "${job.title}" has been accepted. Order is awaiting client payment.`,
+                "info", // Info, not Success yet
                 "/dashboard/freelancer/orders"
             )
 
-            toast.success("Proposal accepted! Order created.")
+            toast.success("Proposal accepted! Order created (Awaiting Payment).")
             router.push("/dashboard/client/orders")
         } catch (error) {
             console.error("Error accepting proposal:", error)

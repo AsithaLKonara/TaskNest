@@ -56,23 +56,23 @@ export default function FreelancerReviewsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Client Feedback</h1>
-                    <p className="text-muted-foreground">What clients are saying about your work.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Client Feedback</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">What clients are saying about your work.</p>
                 </div>
                 {/* Summary Stats */}
-                <div className="flex items-center gap-4 bg-card p-4 rounded-lg border shadow-sm">
+                <div className="flex items-center gap-4 bg-card p-3 md:p-4 rounded-lg border shadow-sm w-fit">
                     <div className="text-center">
-                        <div className="text-2xl font-bold flex items-center justify-center gap-1">
-                            {stats.average.toFixed(1)} <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                        <div className="text-xl md:text-2xl font-bold flex items-center justify-center gap-1">
+                            {stats.average.toFixed(1)} <Star className="w-4 h-4 md:w-5 md:h-5 fill-yellow-400 text-yellow-400" />
                         </div>
-                        <div className="text-xs text-muted-foreground">Average Rating</div>
+                        <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider">Avg Rating</div>
                     </div>
                     <Separator orientation="vertical" className="h-8" />
                     <div className="text-center">
-                        <div className="text-2xl font-bold">{stats.count}</div>
-                        <div className="text-xs text-muted-foreground">Total Reviews</div>
+                        <div className="text-xl md:text-2xl font-bold">{stats.count}</div>
+                        <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider">Reviews</div>
                     </div>
                 </div>
             </div>

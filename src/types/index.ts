@@ -11,21 +11,24 @@ export interface User {
 
 export interface FreelancerProfile {
     uid: string;
+    name?: string;
     title: string;
     bio: string;
     skills: string[];
     languages: string[];
     priceRange: string; // e.g. "$10-$30/hr"
     verified: boolean;
+    status?: 'pending' | 'approved' | 'suspended';
+    available?: boolean; // New toggle
     portfolio: string[]; // URLs
     nicUrl?: string;
     photoURL?: string;
-    availability: 'full-time' | 'part-time';
+    availability: 'full-time' | 'part-time'; // keeping existing for display, maybe merge later
     rating: number;
     reviewCount: number;
 }
 
-export type JobStatus = 'open' | 'in-progress' | 'completed';
+export type JobStatus = 'open' | 'in-progress' | 'completed' | 'expired';
 
 export interface Job {
     jobId: string;
@@ -56,7 +59,7 @@ export interface Proposal {
     createdAt: number;
 }
 
-export type OrderStatus = 'active' | 'in-progress' | 'delivered' | 'completed' | 'cancelled';
+export type OrderStatus = 'awaiting_payment' | 'active' | 'delivered' | 'revision_requested' | 'completed' | 'cancelled';
 
 export interface Order {
     orderId: string;

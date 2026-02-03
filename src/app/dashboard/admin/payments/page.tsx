@@ -36,13 +36,46 @@ export default function AdminPaymentsPage() {
         fetchOrders()
     }, [])
 
+    const handleVerifyPayment = async (order: Order) => {
+        if (!confirm("Confirm payment verification? This will notify the freelancer to start work.")) return
+        try {
+            const docRef = doc(db, "orders", order.orderId)
+            await updateDoc(docRef, { status: 'active' })
+
+            // Notify Freelancer
+            const { createNotification } = await import("@/lib/notifications")
+            await createNotification(
+                order.freelancerId,
+                "Payment Verified!",
+                `The client's payment for Order #${order.orderId.slice(0, 6)} has been verified. You can start working now.`,
+                "success",
+                "/dashboard/freelancer/orders"
+            )
+
+            setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'active' } : o))
+            toast.success("Payment verified. Freelancer notified.")
+        } catch (e) {
+            console.error(e)
+            toast.error("Failed to verify payment")
+        }
+    }
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'awaiting_payment': return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Awaiting Payment</Badge>
+            case 'active': return <Badge variant="default" className="bg-blue-600 text-white">Active</Badge>
+            case 'completed': return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>
+            default: return <Badge variant="secondary">{status}</Badge>
+        }
+    }
+
     if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
 
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Payment Verification</h1>
-                <p className="text-muted-foreground">Review manual bank transfer proofs.</p>
+                <p className="text-muted-foreground">Review and approve manual bank transfer receipts.</p>
             </div>
 
             <div className="border rounded-md bg-card">
@@ -58,49 +91,46 @@ export default function AdminPaymentsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {orders.map((order) => (
-                            <TableRow key={order.orderId}>
-                                <TableCell className="font-medium">#{order.orderId.slice(0, 6)}</TableCell>
-                                <TableCell>${order.price}</TableCell>
-                                <TableCell>{format(new Date(order.createdAt), "MMM d, yyyy")}</TableCell>
-                                <TableCell>
-                                    <Badge variant="outline">{order.status}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                    {order.paymentProofUrl ? (
-                                        <Link href={order.paymentProofUrl} target="_blank" className="text-blue-600 hover:underline flex items-center gap-1">
-                                            View Proof <ExternalLink className="h-3 w-3" />
-                                        </Link>
-                                    ) : (
-                                        <span className="text-muted-foreground text-xs">None</span>
-                                    )}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    {order.paymentProofUrl && order.status !== 'completed' && order.status !== 'in-progress' && (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={async () => {
-                                                if (!confirm("Confirm payment verification?")) return
-                                                try {
-                                                    const docRef = doc(db, "orders", order.orderId)
-                                                    await updateDoc(docRef, { status: 'in-progress' })
-                                                    setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'in-progress' } : o))
-                                                    toast.success("Payment verified. Order in progress.")
-                                                } catch (e) {
-                                                    toast.error("Failed to verify payment")
-                                                }
-                                            }}
-                                        >
-                                            Mark Verified
-                                        </Button>
-                                    )}
-                                </TableCell>
+                        {orders.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No payments found.</TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            orders.map((order) => (
+                                <TableRow key={order.orderId}>
+                                    <TableCell className="font-medium">#{order.orderId.slice(0, 6)}</TableCell>
+                                    <TableCell>${order.price}</TableCell>
+                                    <TableCell>{format(new Date(order.createdAt), "MMM d, yyyy")}</TableCell>
+                                    <TableCell>
+                                        {getStatusBadge(order.status)}
+                                    </TableCell>
+                                    <TableCell>
+                                        {order.paymentProofUrl ? (
+                                            <Link href={order.paymentProofUrl} target="_blank" className="text-blue-600 hover:underline flex items-center gap-1">
+                                                View Proof <ExternalLink className="h-3 w-3" />
+                                            </Link>
+                                        ) : (
+                                            <span className="text-muted-foreground text-xs">None</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {order.paymentProofUrl && order.status === 'awaiting_payment' && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="border-green-200 text-green-700 hover:bg-green-50"
+                                                onClick={() => handleVerifyPayment(order)}
+                                            >
+                                                Approve Payment
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>
-        </div >
+        </div>
     )
 }

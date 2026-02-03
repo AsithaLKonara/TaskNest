@@ -107,15 +107,7 @@ export default function FreelancerProfilePage() {
                                 {role === 'client' ? (
                                     <>
                                         <HireFreelancerDialog freelancer={profile} />
-                                        <Button
-                                            variant="outline"
-                                            className="w-full gap-2"
-                                            onClick={handleMessage}
-                                            disabled={startingChat}
-                                        >
-                                            {startingChat ? <Loader2 className="animate-spin h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
-                                            Message
-                                        </Button>
+                                        <p className="text-[10px] text-muted-foreground mt-2">Chat will be enabled once you start a hire.</p>
                                     </>
                                 ) : !user ? (
                                     <Button className="w-full" asChild>

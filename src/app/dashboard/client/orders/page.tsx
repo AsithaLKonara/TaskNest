@@ -8,7 +8,7 @@ import { Order } from "@/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, Upload, CheckCircle, ExternalLink, MessageSquare, Check } from "lucide-react"
+import { Loader2, Upload, CheckCircle, ExternalLink, MessageSquare, Check, Clock } from "lucide-react"
 import { format } from "date-fns"
 import { FileUpload } from "@/components/dashboard/file-upload"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -49,10 +49,10 @@ export default function ClientOrdersPage() {
             const orderRef = doc(db, "orders", orderId)
             await updateDoc(orderRef, {
                 paymentProofUrl: url,
-                status: 'active'
+                // status remains 'awaiting_payment' until Admin verifies
             })
             setOrders(prev => prev.map(o => o.orderId === orderId ? { ...o, paymentProofUrl: url } : o))
-            toast.success("Payment proof uploaded")
+            toast.success("Payment proof uploaded. Awaiting Admin verification.")
         } catch (error) {
             console.error("Error updating order:", error)
             toast.error("Failed to update order")
@@ -84,14 +84,26 @@ export default function ClientOrdersPage() {
         try {
             const orderRef = doc(db, "orders", order.orderId)
             await updateDoc(orderRef, {
-                status: 'in-progress',
+                status: 'revision_requested',
             })
-            setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'in-progress' } : o))
+            setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'revision_requested' } : o))
             toast.success("Revision requested")
             setViewingDelivery(null)
         } catch (error) {
             console.error("Error requesting revision:", error)
             toast.error("Failed to request revision")
+        }
+    }
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'awaiting_payment': return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Awaiting Payment</Badge>
+            case 'active': return <Badge variant="default" className="bg-blue-600 text-white">Active</Badge>
+            case 'delivered': return <Badge variant="default" className="bg-purple-600 text-white">Delivered</Badge>
+            case 'revision_requested': return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Revision Requested</Badge>
+            case 'completed': return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>
+            case 'cancelled': return <Badge variant="destructive">Cancelled</Badge>
+            default: return <Badge variant="secondary">{status}</Badge>
         }
     }
 
@@ -127,13 +139,11 @@ export default function ClientOrdersPage() {
                                     <TableCell>{order.freelancerId.slice(0, 6)}...</TableCell>
                                     <TableCell>${order.price}</TableCell>
                                     <TableCell>
-                                        <Badge variant={order.status === 'completed' ? 'secondary' : 'default'}>
-                                            {order.status}
-                                        </Badge>
+                                        {getStatusBadge(order.status)}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         {/* Payment Upload Logic */}
-                                        {!order.paymentProofUrl && order.status === 'active' && (
+                                        {!order.paymentProofUrl && order.status === 'awaiting_payment' && (
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button size="sm" variant="outline" className="gap-2">
@@ -144,7 +154,8 @@ export default function ClientOrdersPage() {
                                                     <DialogHeader>
                                                         <DialogTitle>Upload Bank Transfer Proof</DialogTitle>
                                                     </DialogHeader>
-                                                    <div className="py-4">
+                                                    <div className="py-4 text-sm text-muted-foreground space-y-4">
+                                                        <p>Please transfer <strong>${order.price}</strong> to our bank account and upload the receipt below.</p>
                                                         <FileUpload
                                                             folder={`payments/${order.orderId}`}
                                                             onChange={(urls) => {
@@ -157,9 +168,9 @@ export default function ClientOrdersPage() {
                                                 </DialogContent>
                                             </Dialog>
                                         )}
-                                        {order.paymentProofUrl && order.status !== 'delivered' && order.status !== 'completed' && (
-                                            <div className="flex items-center justify-end text-green-600 gap-1 text-sm">
-                                                <CheckCircle className="h-4 w-4" /> Proof Sent
+                                        {order.paymentProofUrl && order.status === 'awaiting_payment' && (
+                                            <div className="flex items-center justify-end text-yellow-600 gap-1 text-sm">
+                                                <Clock className="h-4 w-4" /> Verifying Payment
                                             </div>
                                         )}
 

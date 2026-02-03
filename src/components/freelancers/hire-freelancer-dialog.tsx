@@ -4,6 +4,8 @@ import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { createNotification } from "@/lib/notifications"
+import { useChat } from "@/hooks/use-chat"
 import { FreelancerProfile } from "@/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,6 +31,7 @@ interface HireFreelancerDialogProps {
 export function HireFreelancerDialog({ freelancer }: HireFreelancerDialogProps) {
     const { user, role } = useAuth()
     const router = useRouter()
+    const { startChat, sendMessage } = useChat()
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -69,17 +72,32 @@ export function HireFreelancerDialog({ freelancer }: HireFreelancerDialogProps) 
             })
 
             // 2. Create the Order
-            await addDoc(collection(db, "orders"), {
+            const orderRef = await addDoc(collection(db, "orders"), {
                 jobId: jobRef.id,
                 clientId: user.uid,
                 freelancerId: freelancer.uid,
                 price: parseFloat(budget),
-                status: "active",
+                status: "awaiting_payment", // Changed from 'active'
                 paymentProofUrl: null,
                 createdAt: serverTimestamp()
             })
 
-            toast.success("Hiring request sent! Order created.")
+            // 3. Initialize Chat & Send First Message
+            const chatId = await startChat(freelancer.uid, freelancer.title || "Freelancer")
+            if (chatId) {
+                await sendMessage(chatId, `🚀 I have started a direct hire for "${title}" with a budget of $${budget}. Please check the order details.`)
+            }
+
+            // 4. Notify Freelancer
+            await createNotification(
+                freelancer.uid,
+                "Direct Hire Request",
+                `${user.displayName} want to hire you for "${title}". Order is pending payment.`,
+                "info",
+                "/dashboard/freelancer/orders"
+            )
+
+            toast.success("Direct hire request created! Please complete payment to start work.")
             setOpen(false)
             router.push("/dashboard/client/orders")
         } catch (error) {

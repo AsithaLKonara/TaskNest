@@ -51,9 +51,11 @@ export default function AdminJobsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Manage Jobs</h1>
-                <p className="text-muted-foreground">Oversight for all job postings.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Manage Jobs</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">Oversight for all job postings.</p>
+                </div>
             </div>
 
             <div className="border rounded-md bg-card">

@@ -127,19 +127,21 @@ export default function DashboardLayout({
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Topbar */}
-                <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
+                <header className="flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 shrink-0">
                     {/* Mobile Sidebar Trigger */}
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <Button variant="outline" size="icon" className="md:hidden">
-                                <Menu className="h-5 w-5" />
-                                <span className="sr-only">Toggle navigation menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="p-0 w-64">
-                            {navContent}
-                        </SheetContent>
-                    </Sheet>
+                    <div className="flex-1 md:hidden">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="-ml-2">
+                                    <Menu className="h-5 w-5" />
+                                    <span className="sr-only">Toggle navigation menu</span>
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="p-0 w-72">
+                                {navContent}
+                            </SheetContent>
+                        </Sheet>
+                    </div>
 
                     <div className="flex items-center gap-2 ml-auto md:ml-0">
                         <NotificationsPopover />
@@ -147,8 +149,10 @@ export default function DashboardLayout({
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                    {children}
+                <main className="flex-1 overflow-y-auto p-4 md:p-8 !pt-4">
+                    <div className="max-w-7xl mx-auto">
+                        {children}
+                    </div>
                 </main>
             </div>
         </div>

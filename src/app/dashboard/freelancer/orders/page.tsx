@@ -2,28 +2,31 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/context/auth-context"
-import { collection, query, where, getDocs } from "firebase/firestore"
+import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Order } from "@/types"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, Upload } from "lucide-react"
+import { Loader2, Upload, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { format } from "date-fns"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { FileUpload } from "@/components/dashboard/file-upload"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { doc, updateDoc } from "firebase/firestore"
 
 export default function OrdersPage() {
-    const { user } = useAuth()
+    const { user } = userAuth()
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
     const [deliveringOrderId, setDeliveringOrderId] = useState<string | null>(null)
     const [deliveryFiles, setDeliveryFiles] = useState<string[]>([])
     const [deliveryComment, setDeliveryComment] = useState("")
     const [submitting, setSubmitting] = useState(false)
+
+    // Fix for useAuth which might be exported differently or used differently
+    // In this repo it's usually { user } = useAuth()
+    function userAuth() { return useAuth() }
 
     useEffect(() => {
         async function fetchOrders() {
@@ -62,7 +65,7 @@ export default function OrdersPage() {
             const orderRef = doc(db, "orders", deliveringOrderId)
             await updateDoc(orderRef, {
                 status: 'delivered',
-                deliveryUrl: deliveryFiles[0], // MVP: Single file or first file
+                deliveryUrl: deliveryFiles[0],
                 deliveryComment: deliveryComment
             })
 
@@ -84,18 +87,32 @@ export default function OrdersPage() {
         }
     }
 
-    if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'awaiting_payment': return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1"><Clock className="h-3 w-3" /> Waiting for Payment</Badge>
+            case 'active': return <Badge variant="default" className="bg-blue-600 text-white">Active</Badge>
+            case 'delivered': return <Badge variant="default" className="bg-purple-600 text-white">Delivered / In Review</Badge>
+            case 'revision_requested': return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 gap-1"><AlertCircle className="h-3 w-3" /> Revision Requested</Badge>
+            case 'completed': return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>
+            case 'cancelled': return <Badge variant="destructive">Cancelled</Badge>
+            default: return <Badge variant="secondary">{status}</Badge>
+        }
+    }
+
+    if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Active Orders</h1>
-                <p className="text-muted-foreground">Manage your ongoing projects and payments.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Active Orders</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">Manage your ongoing projects and payments.</p>
+                </div>
             </div>
 
-            <div className="border rounded-md">
+            <div className="border rounded-md bg-card">
                 <Table>
-                    <TableCaption>Your active and completed orders.</TableCaption>
+                    <TableCaption>Your current and past orders.</TableCaption>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Order ID</TableHead>
@@ -109,7 +126,7 @@ export default function OrdersPage() {
                         {orders.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    No active orders found.
+                                    No orders found.
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -119,14 +136,10 @@ export default function OrdersPage() {
                                     <TableCell>{format(new Date(order.createdAt), "MMM d, yyyy")}</TableCell>
                                     <TableCell>${order.price}</TableCell>
                                     <TableCell>
-                                        <Badge variant={
-                                            order.status === "completed" ? "default" : "outline"
-                                        }>
-                                            {order.status}
-                                        </Badge>
+                                        {getStatusBadge(order.status)}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {(order.status === 'active' || order.status === 'in-progress') && (
+                                        {(order.status === 'active' || order.status === 'revision_requested') && (
                                             <Dialog open={deliveringOrderId === order.orderId} onOpenChange={(open) => {
                                                 if (!open) setDeliveringOrderId(null)
                                                 else setDeliveringOrderId(order.orderId)
@@ -174,6 +187,9 @@ export default function OrdersPage() {
                                         )}
                                         {order.status === 'delivered' && (
                                             <Badge variant="secondary">In Review</Badge>
+                                        )}
+                                        {order.status === 'awaiting_payment' && (
+                                            <span className="text-xs text-muted-foreground italic">Waiting for client payment confirmation...</span>
                                         )}
                                     </TableCell>
                                 </TableRow>

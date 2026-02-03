@@ -31,14 +31,19 @@ export default function FreelancersPage() {
     useEffect(() => {
         async function fetchFreelancers() {
             try {
-                // Fetch all verified freelancers
-                const q = query(collection(db, "freelancerProfiles")) // In real app, check verified filter: where("verified", "==", true)
+                // Fetch all approved freelancers
+                const q = query(
+                    collection(db, "freelancerProfiles"),
+                    where("status", "==", "approved")
+                )
                 const querySnapshot = await getDocs(q)
                 const fetchedProfiles = querySnapshot.docs.map(doc => ({
                     uid: doc.id,
                     ...doc.data()
                 })) as FreelancerProfile[]
-                setProfiles(fetchedProfiles)
+
+                // Client-side availability check
+                setProfiles(fetchedProfiles.filter(p => p.available !== false))
             } catch (error) {
                 console.error("Error fetching freelancers:", error)
             } finally {
