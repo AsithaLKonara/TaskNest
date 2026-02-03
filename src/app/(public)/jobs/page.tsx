@@ -13,7 +13,13 @@ import Link from "next/link"
 
 export default function JobsPage() {
     const [jobs, setJobs] = useState<Job[]>([])
+    const [filteredJobs, setFilteredJobs] = useState<Job[]>([])
     const [loading, setLoading] = useState(true)
+
+    // Filter States
+    const [searchTerm, setSearchTerm] = useState("")
+    const [category, setCategory] = useState("All")
+    const [minBudget, setMinBudget] = useState("")
 
     useEffect(() => {
         async function fetchJobs() {
@@ -28,9 +34,9 @@ export default function JobsPage() {
                     ...doc.data()
                 })) as Job[]
 
-                // Manual sort 
                 fetchedJobs.sort((a, b) => b.createdAt - a.createdAt)
                 setJobs(fetchedJobs)
+                setFilteredJobs(fetchedJobs)
             } catch (error) {
                 console.error("Error fetching jobs:", error)
             } finally {
@@ -40,7 +46,33 @@ export default function JobsPage() {
         fetchJobs()
     }, [])
 
+    useEffect(() => {
+        // Filter Logic
+        let result = jobs
+
+        if (searchTerm) {
+            const lowerTerm = searchTerm.toLowerCase()
+            result = result.filter(job =>
+                job.title.toLowerCase().includes(lowerTerm) ||
+                job.description.toLowerCase().includes(lowerTerm) ||
+                job.skills?.some(skill => skill.toLowerCase().includes(lowerTerm))
+            )
+        }
+
+        if (category !== "All") {
+            result = result.filter(job => job.category === category)
+        }
+
+        if (minBudget) {
+            result = result.filter(job => job.budget >= parseInt(minBudget))
+        }
+
+        setFilteredJobs(result)
+    }, [jobs, searchTerm, category, minBudget])
+
     if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+
+    const categories = ["All", "Web Development", "Mobile App", "UI/UX Design", "Content Writing", "Marketing"]
 
     return (
         <div className="container mx-auto py-10 px-4">
@@ -49,14 +81,51 @@ export default function JobsPage() {
                 <p className="text-muted-foreground text-lg">Find your next project from top clients. Work remotely, secure payments.</p>
             </div>
 
+            {/* Search & Filters */}
+            <div className="bg-muted/40 p-6 rounded-xl border mb-10 space-y-4 md:space-y-0 md:flex md:items-center md:gap-4">
+                <div className="flex-1">
+                    <input
+                        type="text"
+                        placeholder="Search by title, skill, or keyword..."
+                        className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="w-full md:w-48">
+                    <select
+                        className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                    >
+                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                </div>
+                <div className="w-full md:w-48">
+                    <input
+                        type="number"
+                        placeholder="Min Budget ($)"
+                        className="w-full px-4 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        value={minBudget}
+                        onChange={(e) => setMinBudget(e.target.value)}
+                    />
+                </div>
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {jobs.length === 0 ? (
+                {filteredJobs.length === 0 ? (
                     <div className="col-span-full text-center py-20 bg-muted/30 rounded-xl">
                         <h3 className="text-xl font-semibold mb-2">No jobs found</h3>
-                        <p className="text-muted-foreground">Check back later or adjust your filters.</p>
+                        <p className="text-muted-foreground">Try adjusting your search terms or filters.</p>
+                        <Button
+                            variant="link"
+                            onClick={() => { setSearchTerm(""); setCategory("All"); setMinBudget("") }}
+                        >
+                            Clear Filters
+                        </Button>
                     </div>
                 ) : (
-                    jobs.map((job) => (
+                    filteredJobs.map((job) => (
                         <Card key={job.jobId} className="flex flex-col hover:shadow-lg transition-shadow border-primary/10">
                             <CardHeader>
                                 <div className="flex justify-between items-start mb-2">

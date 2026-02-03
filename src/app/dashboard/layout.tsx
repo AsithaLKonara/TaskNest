@@ -3,10 +3,13 @@
 import { useAuth } from "@/context/auth-context"
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect } from "react"
-import { Loader2, LogOut, LayoutDashboard, Briefcase, FileText, MessageSquare, CreditCard, Users, ShieldAlert, Cog, Building, Star } from "lucide-react"
+import { Loader2, LogOut, LayoutDashboard, Briefcase, FileText, MessageSquare, CreditCard, Users, ShieldAlert, Cog, Building, Star, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { BackButton } from "@/components/ui/back-button"
+import { NotificationsPopover } from "@/components/notifications-popover"
 
 export default function DashboardLayout({
     children,
@@ -67,58 +70,87 @@ export default function DashboardLayout({
     if (role === 'client') navItems = clientNav
     if (role === 'admin') navItems = adminNav
 
-    return (
-        <div className="flex h-screen bg-muted/40 font-sans">
-            {/* Sidebar */}
-            <aside className="hidden w-64 flex-col border-r bg-background md:flex">
-                <div className="flex h-16 items-center border-b px-6">
-                    <Link href="/" className="flex items-center gap-2 font-bold text-lg text-primary">
-                        TaskNest
-                    </Link>
-                </div>
-                <nav className="flex-1 space-y-1 px-4 py-4">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary",
-                                pathname === item.href ? "bg-muted text-primary" : "text-muted-foreground"
-                            )}
-                        >
-                            <item.icon className="h-4 w-4" />
-                            {item.name}
-                        </Link>
-                    ))}
+    const navContent = (
+        <div className="flex flex-col h-full">
+            <div className="flex h-16 items-center border-b px-6">
+                <Link href="/" className="flex items-center gap-2 font-bold text-lg text-primary">
+                    TaskNest
+                </Link>
+            </div>
+            <nav className="flex-1 space-y-1 px-4 py-4">
+                {navItems.map((item) => (
                     <Link
-                        href="/dashboard/messages"
+                        key={item.href}
+                        href={item.href}
                         className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary",
-                            pathname.includes("messages") ? "bg-muted text-primary" : "text-muted-foreground"
+                            pathname === item.href ? "bg-muted text-primary" : "text-muted-foreground"
                         )}
                     >
-                        <MessageSquare className="h-4 w-4" />
-                        Messages
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
                     </Link>
-                </nav>
-                <div className="border-t p-4">
-                    <div className="flex items-center gap-3 mb-4 px-3">
-                        <div className="text-sm">
-                            <p className="font-medium truncate max-w-[150px]">{user.displayName || "User"}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{role}</p>
-                        </div>
+                ))}
+                <Link
+                    href="/dashboard/messages"
+                    className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary",
+                        pathname.includes("messages") ? "bg-muted text-primary" : "text-muted-foreground"
+                    )}
+                >
+                    <MessageSquare className="h-4 w-4" />
+                    Messages
+                </Link>
+            </nav>
+            <div className="border-t p-4 mt-auto">
+                <div className="flex items-center gap-3 mb-4 px-3">
+                    <div className="text-sm">
+                        <p className="font-medium truncate max-w-[150px]">{user.displayName || "User"}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{role}</p>
                     </div>
-                    <Button variant="outline" className="w-full justify-start gap-2" onClick={() => logout()}>
-                        <LogOut className="h-4 w-4" />
-                        Log Out
-                    </Button>
                 </div>
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={() => logout()}>
+                    <LogOut className="h-4 w-4" />
+                    Log Out
+                </Button>
+            </div>
+        </div>
+    )
+
+    return (
+        <div className="flex h-screen bg-muted/40 font-sans">
+            {/* Desktop Sidebar */}
+            <aside className="hidden w-64 flex-col border-r bg-background md:flex">
+                {navContent}
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                {children}
-            </main>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Topbar */}
+                <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
+                    {/* Mobile Sidebar Trigger */}
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="outline" size="icon" className="md:hidden">
+                                <Menu className="h-5 w-5" />
+                                <span className="sr-only">Toggle navigation menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="p-0 w-64">
+                            {navContent}
+                        </SheetContent>
+                    </Sheet>
+
+                    <div className="flex items-center gap-2 ml-auto md:ml-0">
+                        <NotificationsPopover />
+                        <BackButton />
+                    </div>
+                </header>
+
+                <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                    {children}
+                </main>
+            </div>
         </div>
     )
 }

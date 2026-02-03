@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react"
 import { useState } from "react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ModeToggle } from "@/components/mode-toggle"
+import { NotificationsPopover } from "@/components/notifications-popover"
 
 export function Navbar() {
     const { user, logout } = useAuth()
@@ -39,6 +40,7 @@ export function Navbar() {
                 <div className="hidden md:flex items-center gap-4">
                     {user ? (
                         <>
+                            <NotificationsPopover />
                             <Button variant="ghost" asChild>
                                 <Link href="/dashboard/freelancer">Dashboard</Link>
                             </Button>
