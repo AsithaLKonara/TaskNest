@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Loader2, User as UserIcon } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 
 export const dynamic = "force-dynamic"
 
@@ -73,7 +74,7 @@ export default function AdminUsersPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    {user.createdAt ? format(new Date(user.createdAt), "MMM d, yyyy") : "N/A"}
+                                    {formatSafeDate(user.createdAt)}
                                 </TableCell>
                             </TableRow>
                         ))}

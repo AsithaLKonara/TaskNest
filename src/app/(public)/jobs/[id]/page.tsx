@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Calendar, DollarSign, Clock, MapPin, Send } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import Link from "next/link"
 import { SubmitProposalDialog } from "@/components/jobs/submit-proposal-dialog"
 
@@ -82,7 +83,7 @@ export default function JobDetailsPage() {
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <Badge variant="secondary" className="rounded-md">{job.category}</Badge>
                                 <span>•</span>
-                                <span className="text-sm">Posted {format(new Date(job.createdAt), "PPP")}</span>
+                                <span className="text-sm">Posted {formatSafeDate(job.createdAt, "PPP")}</span>
                             </div>
                         </div>
 
@@ -145,7 +146,7 @@ export default function JobDetailsPage() {
                                 <div className="flex items-center gap-3 text-sm font-medium mb-1">
                                     <Calendar className="h-4 w-4 text-primary" /> Delivery Date
                                 </div>
-                                <p className="text-base px-7">{format(new Date(job.deadline), "PPP")}</p>
+                                <p className="text-base px-7">{formatSafeDate(job.deadline, "PPP")}</p>
                             </div>
                             <div>
                                 <div className="flex items-center gap-3 text-sm font-medium mb-1">

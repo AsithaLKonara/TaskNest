@@ -9,7 +9,7 @@ import { useAuth } from "@/context/auth-context"
 import { collection, query, where, onSnapshot, orderBy, doc, writeBatch, limit } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Notification } from "@/types"
-import { cn } from "@/lib/utils"
+import { cn, formatSafeDate } from "@/lib/utils"
 // import { formatDistanceToNow } from "date-fns" // Optional
 
 export function NotificationsPopover() {
@@ -102,7 +102,7 @@ export function NotificationsPopover() {
                                                 {notification.message}
                                             </p>
                                             <p className="text-[10px] text-muted-foreground mt-1">
-                                                {new Date(notification.createdAt).toLocaleDateString()}
+                                                {formatSafeDate(notification.createdAt)}
                                             </p>
                                         </div>
                                         {!notification.read && (

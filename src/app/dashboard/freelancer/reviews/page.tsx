@@ -8,6 +8,7 @@ import { Review } from "@/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Star, ThumbsUp } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 
@@ -98,7 +99,7 @@ export default function FreelancerReviewsPage() {
                                             </Avatar>
                                             <div>
                                                 <div className="text-sm font-medium">Client</div>
-                                                <div className="text-xs text-muted-foreground">{format(new Date(review.createdAt), "MMM d, yyyy")}</div>
+                                                <div className="text-xs text-muted-foreground">{formatSafeDate(review.createdAt)}</div>
                                             </div>
                                         </div>
                                         <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-yellow-700 text-xs font-bold ring-1 ring-inset ring-yellow-600/20">

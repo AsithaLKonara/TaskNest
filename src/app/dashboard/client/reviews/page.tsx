@@ -8,6 +8,7 @@ import { Review } from "@/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Star } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 export default function ClientReviewsPage() {
@@ -76,7 +77,7 @@ export default function ClientReviewsPage() {
                                             <span className="text-sm font-medium ml-2">{review.rating.toFixed(1)}</span>
                                         </div>
                                         <p className="text-sm text-muted-foreground">
-                                            For Order #{review.orderId.slice(0, 6)} • {format(new Date(review.createdAt), "MMM d, yyyy")}
+                                            For Order #{review.orderId.slice(0, 6)} • {formatSafeDate(review.createdAt)}
                                         </p>
                                     </div>
                                     <Avatar className="h-8 w-8">

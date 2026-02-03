@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Loader2, DollarSign, Clock, CheckCircle, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function ClientJobDetailsPage() {
@@ -121,7 +122,7 @@ export default function ClientJobDetailsPage() {
                     <div className="flex items-center gap-2 text-muted-foreground mt-1">
                         <Badge variant="outline">{job.status}</Badge>
                         <span>•</span>
-                        <span>Posted {format(new Date(job.createdAt), "PPP")}</span>
+                        <span>Posted {formatSafeDate(job.createdAt, "PPP")}</span>
                     </div>
                 </div>
                 <div className="text-right">
@@ -153,7 +154,7 @@ export default function ClientJobDetailsPage() {
                                         <div>
                                             <CardTitle className="text-lg">{proposal.freelancerName}</CardTitle>
                                             <CardDescription className="text-xs">
-                                                {format(new Date(proposal.createdAt), "MMM d, h:mm a")}
+                                                {formatSafeDate(proposal.createdAt, "MMM d, h:mm a")}
                                             </CardDescription>
                                         </div>
                                     </div>

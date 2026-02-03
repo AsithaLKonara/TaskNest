@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, Upload, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { FileUpload } from "@/components/dashboard/file-upload"
 import { Textarea } from "@/components/ui/textarea"
@@ -133,7 +134,7 @@ export default function OrdersPage() {
                             orders.map((order) => (
                                 <TableRow key={order.orderId}>
                                     <TableCell className="font-medium">#{order.orderId.slice(0, 6)}</TableCell>
-                                    <TableCell>{format(new Date(order.createdAt), "MMM d, yyyy")}</TableCell>
+                                    <TableCell>{formatSafeDate(order.createdAt)}</TableCell>
                                     <TableCell>${order.price}</TableCell>
                                     <TableCell>
                                         {getStatusBadge(order.status)}

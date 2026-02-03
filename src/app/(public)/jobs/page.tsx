@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Calendar, DollarSign, Briefcase } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import Link from "next/link"
 
 export default function JobsPage() {
@@ -132,7 +133,7 @@ export default function JobsPage() {
                                     <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
                                         {job.category}
                                     </Badge>
-                                    <span className="text-xs text-muted-foreground">{format(new Date(job.createdAt), "MMM d")}</span>
+                                    <span className="text-xs text-muted-foreground">{formatSafeDate(job.createdAt, "MMM d")}</span>
                                 </div>
                                 <CardTitle className="line-clamp-2 md:h-14">{job.title}</CardTitle>
                             </CardHeader>
@@ -145,7 +146,7 @@ export default function JobsPage() {
                                         <DollarSign className="h-4 w-4" /> ${job.budget}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Calendar className="h-4 w-4" /> {format(new Date(job.deadline), "MMM d")}
+                                        <Calendar className="h-4 w-4" /> {formatSafeDate(job.deadline, "MMM d")}
                                     </div>
                                 </div>
                             </CardContent>

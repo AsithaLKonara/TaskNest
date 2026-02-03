@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, Calendar, DollarSign, Clock, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import Link from "next/link"
 
 interface ProposalWithJob extends Proposal {
@@ -105,7 +106,7 @@ export default function MyProposalsPage() {
                                                 </Link>
                                             </CardTitle>
                                             <CardDescription>
-                                                Sent to {proposal.clientName || "Client"} on {format(new Date(proposal.createdAt), "MMM d, yyyy")}
+                                                Sent to {proposal.clientName || "Client"} on {formatSafeDate(proposal.createdAt)}
                                             </CardDescription>
                                         </div>
                                         <Badge

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Trash2, Ban } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 
 export default function AdminJobsPage() {
     const [jobs, setJobs] = useState<Job[]>([])
@@ -76,7 +77,7 @@ export default function AdminJobsPage() {
                                 <TableCell className="font-medium">{job.title}</TableCell>
                                 <TableCell>{job.clientName || "Unknown"}</TableCell>
                                 <TableCell>${job.budget}</TableCell>
-                                <TableCell>{format(new Date(job.createdAt), "MMM d, yyyy")}</TableCell>
+                                <TableCell>{formatSafeDate(job.createdAt)}</TableCell>
                                 <TableCell>
                                     <Badge variant="outline">{job.status}</Badge>
                                 </TableCell>

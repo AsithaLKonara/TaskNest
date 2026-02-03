@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -100,7 +101,7 @@ export default function AdminPaymentsPage() {
                                 <TableRow key={order.orderId}>
                                     <TableCell className="font-medium">#{order.orderId.slice(0, 6)}</TableCell>
                                     <TableCell>${order.price}</TableCell>
-                                    <TableCell>{format(new Date(order.createdAt), "MMM d, yyyy")}</TableCell>
+                                    <TableCell>{formatSafeDate(order.createdAt)}</TableCell>
                                     <TableCell>
                                         {getStatusBadge(order.status)}
                                     </TableCell>

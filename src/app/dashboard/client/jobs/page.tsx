@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, Eye, Edit } from "lucide-react"
 import { format } from "date-fns"
+import { formatSafeDate } from "@/lib/utils"
 import Link from "next/link"
 
 export default function MyJobsPage() {
@@ -82,7 +83,7 @@ export default function MyJobsPage() {
                                 <TableRow key={job.jobId}>
                                     <TableCell className="font-medium">{job.title}</TableCell>
                                     <TableCell>{job.category}</TableCell>
-                                    <TableCell>{format(new Date(job.createdAt), "MMM d, yyyy")}</TableCell>
+                                    <TableCell>{formatSafeDate(job.createdAt)}</TableCell>
                                     <TableCell>0</TableCell> {/* TODO: Count proposals */}
                                     <TableCell>
                                         <Badge variant={
