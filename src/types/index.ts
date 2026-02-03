@@ -19,6 +19,7 @@ export interface FreelancerProfile {
     verified: boolean;
     portfolio: string[]; // URLs
     nicUrl?: string;
+    photoURL?: string;
     availability: 'full-time' | 'part-time';
     rating: number;
     reviewCount: number;
@@ -54,7 +55,7 @@ export interface Proposal {
     createdAt: number;
 }
 
-export type OrderStatus = 'active' | 'completed' | 'cancelled';
+export type OrderStatus = 'active' | 'in-progress' | 'delivered' | 'completed' | 'cancelled';
 
 export interface Order {
     orderId: string;
@@ -64,6 +65,8 @@ export interface Order {
     price: number;
     status: OrderStatus;
     paymentProofUrl?: string; // For manual bank transfer verification
+    deliveryUrl?: string;
+    deliveryComment?: string;
     createdAt: number;
 }
 
