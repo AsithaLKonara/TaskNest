@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, User as UserIcon } from "lucide-react"
 import { format } from "date-fns"
 
+export const dynamic = "force-dynamic"
+
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<User[]>([])
     const [loading, setLoading] = useState(true)

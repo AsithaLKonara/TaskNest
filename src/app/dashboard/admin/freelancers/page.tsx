@@ -11,6 +11,8 @@ import { Loader2, ShieldCheck, Eye } from "lucide-react"
 import { VerificationModal } from "@/components/dashboard/admin/verification-modal"
 import { toast } from "sonner"
 
+export const dynamic = "force-dynamic"
+
 export default function AdminFreelancersPage() {
     const [profiles, setProfiles] = useState<FreelancerProfile[]>([])
     const [loading, setLoading] = useState(true)
