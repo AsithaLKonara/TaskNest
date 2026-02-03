@@ -63,6 +63,7 @@ export default function RegisterPage() {
             if (values.role === "freelancer") {
                 await setDoc(doc(db, "freelancerProfiles", user.uid), {
                     uid: user.uid,
+                    name: values.name,
                     title: "",
                     bio: "",
                     skills: [],

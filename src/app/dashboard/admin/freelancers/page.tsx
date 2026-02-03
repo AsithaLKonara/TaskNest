@@ -83,8 +83,11 @@ export default function AdminFreelancersPage() {
                         {profiles.map((profile) => (
                             <TableRow key={profile.uid}>
                                 <TableCell className="font-medium">
-                                    <div>{profile.title || "Untitled"}</div>
-                                    <div className="text-xs text-muted-foreground truncate max-w-[200px]">{profile.bio}</div>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold">{profile.name || "Unknown User"}</span>
+                                        <span className="text-sm">{profile.title || "Untitled"}</span>
+                                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">{profile.bio}</div>
+                                    </div>
                                 </TableCell>
                                 <TableCell>{profile.priceRange}</TableCell>
                                 <TableCell>
@@ -102,11 +105,9 @@ export default function AdminFreelancersPage() {
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    {!profile.verified && profile.nicUrl && (
-                                        <Button size="sm" onClick={() => setSelectedProfile(profile)}>
-                                            <Eye className="mr-2 h-3 w-3" /> Review
-                                        </Button>
-                                    )}
+                                    <Button size="sm" variant={profile.verified ? "outline" : "default"} onClick={() => setSelectedProfile(profile)}>
+                                        <Eye className="mr-2 h-3 w-3" /> {profile.verified ? "View" : "Review"}
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         ))}

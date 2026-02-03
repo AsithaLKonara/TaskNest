@@ -24,12 +24,13 @@ export function NotificationsPopover() {
         const q = query(
             collection(db, "notifications"),
             where("userId", "==", user.uid),
-            orderBy("createdAt", "desc"),
             limit(20)
         )
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification))
+            // Sort client-side to avoid missing index error in production
+            items.sort((a, b) => b.createdAt - a.createdAt)
             setNotifications(items)
             setUnreadCount(items.filter(n => !n.read).length)
         })

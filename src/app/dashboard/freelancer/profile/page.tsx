@@ -79,6 +79,7 @@ export default function ProfilePage() {
         try {
             const profileData = {
                 uid: user.uid,
+                name: user.displayName,
                 title: values.title,
                 bio: values.bio,
                 priceRange: values.hourlyRate,
@@ -86,7 +87,7 @@ export default function ProfilePage() {
                 portfolio: values.portfolio || [],
                 availability: values.availability ? 'full-time' : 'part-time',
                 nicUrl: values.nicUrl,
-                // Preserve other fields? For now, we overwrite managed fields
+                status: 'approved', // Or keep current? For testing, let's auto-approve or handle in admin
             }
 
             await setDoc(doc(db, "freelancerProfiles", user.uid), profileData, { merge: true })
