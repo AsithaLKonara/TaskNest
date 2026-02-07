@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { db } from "@/lib/firebase"
-import { increment, doc, updateDoc, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
+import { increment, doc, updateDoc, addDoc, serverTimestamp, query, where, getDocs, collection } from "firebase/firestore"
 import { createNotification } from "@/lib/notifications"
 import { Job } from "@/types"
 import { Button } from "@/components/ui/button"

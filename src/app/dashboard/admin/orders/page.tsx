@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, getDocs, doc, updateDoc, query } from "firebase/firestore"
+import { collection, getDocs, doc, updateDoc, query, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Order } from "@/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -130,7 +130,7 @@ export default function AdminOrdersPage() {
                                                 </div>
                                                 {clientMetrics[order.clientId] && (
                                                     <Badge variant="outline" className={`h-4 text-[9px] mt-1 ${clientMetrics[order.clientId].trustScore > 80 ? 'text-green-600' :
-                                                            clientMetrics[order.clientId].trustScore > 50 ? 'text-orange-600' : 'text-red-600'
+                                                        clientMetrics[order.clientId].trustScore > 50 ? 'text-orange-600' : 'text-red-600'
                                                         }`}>
                                                         Trust: {clientMetrics[order.clientId].trustScore}
                                                     </Badge>
