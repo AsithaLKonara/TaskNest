@@ -3,7 +3,7 @@ import { loadStripe } from '@stripe/stripe-js';
 
 // Server-side Stripe instance
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-01-27', // Use latest or stable version
+    apiVersion: '2026-01-28.clover' as any, // Match installed types
     appInfo: {
         name: 'TaskNest',
         version: '0.1.0',
