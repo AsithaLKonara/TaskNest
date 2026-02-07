@@ -140,58 +140,20 @@ export default function OrdersPage() {
                                         {getStatusBadge(order.status)}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {(order.status === 'active' || order.status === 'revision_requested') && (
-                                            <Dialog open={deliveringOrderId === order.orderId} onOpenChange={(open) => {
-                                                if (!open) setDeliveringOrderId(null)
-                                                else setDeliveringOrderId(order.orderId)
-                                            }}>
-                                                <DialogTrigger asChild>
-                                                    <Button size="sm" variant="default">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button size="sm" variant="outline" asChild>
+                                                <a href={`/dashboard/orders/${order.orderId}/workspace`}>
+                                                    Open Workspace
+                                                </a>
+                                            </Button>
+                                            {(order.status === 'active' || order.status === 'revision_requested') && (
+                                                <Button size="sm" variant="default" asChild>
+                                                    <a href={`/dashboard/orders/${order.orderId}/workspace`}>
                                                         <Upload className="mr-2 h-3 w-3" /> Deliver Work
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="sm:max-w-md">
-                                                    <DialogHeader>
-                                                        <DialogTitle>Deliver Work</DialogTitle>
-                                                        <DialogDescription>
-                                                            Upload your finished work files for the client to review.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="space-y-4 py-4">
-                                                        <div className="space-y-2">
-                                                            <label className="text-sm font-medium">Delivery Files</label>
-                                                            <FileUpload
-                                                                folder={`deliveries/${order.orderId}`}
-                                                                value={deliveryFiles}
-                                                                onChange={setDeliveryFiles}
-                                                                maxFiles={5}
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <label className="text-sm font-medium">Message (Optional)</label>
-                                                            <Textarea
-                                                                placeholder="Describe the work you are delivering..."
-                                                                value={deliveryComment}
-                                                                onChange={(e) => setDeliveryComment(e.target.value)}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <DialogFooter>
-                                                        <Button variant="outline" onClick={() => setDeliveringOrderId(null)}>Cancel</Button>
-                                                        <Button onClick={handleDeliverWork} disabled={submitting || deliveryFiles.length === 0}>
-                                                            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                            Submit Delivery
-                                                        </Button>
-                                                    </DialogFooter>
-                                                </DialogContent>
-                                            </Dialog>
-                                        )}
-                                        {order.status === 'delivered' && (
-                                            <Badge variant="secondary">In Review</Badge>
-                                        )}
-                                        {order.status === 'awaiting_payment' && (
-                                            <span className="text-xs text-muted-foreground italic">Waiting for client payment confirmation...</span>
-                                        )}
+                                                    </a>
+                                                </Button>
+                                            )}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))

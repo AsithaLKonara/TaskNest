@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Upload, CheckCircle, ExternalLink, MessageSquare, Check, Clock } from "lucide-react"
 import { format } from "date-fns"
 import { FileUpload } from "@/components/dashboard/file-upload"
+import { updateFreelancerMetrics } from "@/lib/order-utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { ReviewModal } from "@/components/reviews/review-modal"
 import Link from "next/link"
+import { PayHereButton } from "@/components/payments/payhere-button"
 
 export default function ClientOrdersPage() {
     const { user } = useAuth()
@@ -67,6 +69,10 @@ export default function ClientOrdersPage() {
             await updateDoc(orderRef, {
                 status: 'completed'
             })
+
+            // Update metrics
+            await updateFreelancerMetrics(order.freelancerId)
+
             setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: 'completed' } : o))
             toast.success("Delivery approved!")
             setViewingDelivery(null)
@@ -142,93 +148,67 @@ export default function ClientOrdersPage() {
                                         {getStatusBadge(order.status)}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {/* Payment Upload Logic */}
-                                        {!order.paymentProofUrl && order.status === 'awaiting_payment' && (
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button size="sm" variant="outline" className="gap-2">
-                                                        <Upload className="h-4 w-4" /> Upload Proof
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Upload Bank Transfer Proof</DialogTitle>
-                                                    </DialogHeader>
-                                                    <div className="py-4 text-sm text-muted-foreground space-y-4">
-                                                        <p>Please transfer <strong>${order.price}</strong> to our bank account and upload the receipt below.</p>
-                                                        <FileUpload
-                                                            folder={`payments/${order.orderId}`}
-                                                            onChange={(urls) => {
-                                                                if (urls.length > 0) handlePaymentUpload(order.orderId, urls[0])
-                                                            }}
-                                                            maxFiles={1}
-                                                            value={[]}
-                                                        />
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        )}
-                                        {order.paymentProofUrl && order.status === 'awaiting_payment' && (
-                                            <div className="flex items-center justify-end text-yellow-600 gap-1 text-sm">
-                                                <Clock className="h-4 w-4" /> Verifying Payment
-                                            </div>
-                                        )}
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button size="sm" variant="outline" asChild>
+                                                <a href={`/dashboard/orders/${order.orderId}/workspace`}>
+                                                    Open Workspace
+                                                </a>
+                                            </Button>
 
-                                        {/* Delivery Review Logic */}
-                                        {order.status === 'delivered' && (
-                                            <Dialog open={viewingDelivery?.orderId === order.orderId} onOpenChange={(open) => open ? setViewingDelivery(order) : setViewingDelivery(null)}>
-                                                <DialogTrigger asChild>
-                                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                                                        <CheckCircle className="mr-2 h-3 w-3" /> Review Delivery
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Review Delivery</DialogTitle>
-                                                    </DialogHeader>
-                                                    <div className="space-y-4 py-4">
-                                                        <div className="p-4 border rounded-lg bg-muted/50">
-                                                            <h4 className="font-medium mb-2">Delivery Files</h4>
-                                                            {order.deliveryUrl ? (
-                                                                <Link href={order.deliveryUrl} target="_blank" className="text-blue-600 hover:underline flex items-center gap-2">
-                                                                    <ExternalLink className="h-4 w-4" /> View Submitted Work
-                                                                </Link>
-                                                            ) : (
-                                                                <span className="text-muted-foreground">No files linked.</span>
-                                                            )}
-                                                            {order.deliveryComment && (
-                                                                <div className="mt-3">
-                                                                    <h4 className="font-medium text-sm mb-1">Freelancer Message</h4>
-                                                                    <p className="text-sm text-muted-foreground">{order.deliveryComment}</p>
-                                                                </div>
-                                                            )}
+                                            {/* Payment Actions */}
+                                            {order.status === 'awaiting_payment' && !order.paymentProofUrl && (
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button size="sm" variant="default">
+                                                            Pay Now
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Complete Payment</DialogTitle>
+                                                        </DialogHeader>
+                                                        <div className="space-y-4 py-4">
+                                                            <PayHereButton
+                                                                orderId={order.orderId}
+                                                                clientId={user?.uid || ''}
+                                                                amount={order.price}
+                                                                className="w-full bg-blue-600 hover:bg-blue-700"
+                                                                buttonText="Pay with PayHere"
+                                                            />
+                                                            <div className="relative">
+                                                                <div className="absolute inset-0 flex items-center"><span className="w-full border-t"></span></div>
+                                                                <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Or manual transfer</span></div>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <p className="text-xs text-muted-foreground">Transfer <strong>LKR {order.price}</strong> to our bank and upload receipt.</p>
+                                                                <FileUpload
+                                                                    folder={`payments/${order.orderId}`}
+                                                                    onChange={(urls) => {
+                                                                        if (urls.length > 0) handlePaymentUpload(order.orderId, urls[0])
+                                                                    }}
+                                                                    maxFiles={1}
+                                                                    value={[]}
+                                                                />
+                                                            </div>
                                                         </div>
-                                                        <div className="flex gap-3 pt-2">
-                                                            <Button
-                                                                variant="outline"
-                                                                className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
-                                                                onClick={() => handleRequestRevision(order)}
-                                                            >
-                                                                <MessageSquare className="mr-2 h-4 w-4" /> Request Revision
-                                                            </Button>
-                                                            <Button
-                                                                className="flex-1 bg-green-600 hover:bg-green-700"
-                                                                onClick={() => handleApproveDelivery(order)}
-                                                            >
-                                                                <Check className="mr-2 h-4 w-4" /> Approve & Pay
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        )}
+                                                    </DialogContent>
+                                                </Dialog>
+                                            )}
 
-                                        {/* Completed Status */}
-                                        {order.status === 'completed' && (
-                                            <Badge variant="outline" className="text-green-600 border-green-200">
-                                                Completed
-                                            </Badge>
-                                        )}
+                                            {order.status === 'delivered' && (
+                                                <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white" asChild>
+                                                    <a href={`/dashboard/orders/${order.orderId}/workspace`}>
+                                                        Review Submission
+                                                    </a>
+                                                </Button>
+                                            )}
+
+                                            {order.status === 'completed' && (
+                                                <Button size="sm" variant="ghost" onClick={() => setReviewOrder(order)}>
+                                                    Leave Review
+                                                </Button>
+                                            )}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
