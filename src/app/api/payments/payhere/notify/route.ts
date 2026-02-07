@@ -4,6 +4,8 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { holdEscrow } from '@/lib/wallet-utils';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
     try {
         const formData = await req.formData();

@@ -4,6 +4,8 @@ import { db } from '@/lib/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { headers } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
     const body = await req.text();
     const signature = (await headers()).get('stripe-signature') as string;

@@ -3,6 +3,8 @@ import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
     try {
         const { userId } = await req.json();

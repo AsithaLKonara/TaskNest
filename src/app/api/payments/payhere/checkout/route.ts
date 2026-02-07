@@ -3,6 +3,8 @@ import { payhereConfig, generatePayHereHash } from '@/lib/payhere';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
     try {
         const { orderId, clientId, amount, currency = 'LKR' } = await req.json();
