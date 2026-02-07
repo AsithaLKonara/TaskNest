@@ -34,7 +34,8 @@ export default function FreelancersPage() {
                 // Fetch all approved freelancers
                 const q = query(
                     collection(db, "freelancerProfiles"),
-                    where("status", "==", "approved")
+                    where("status", "==", "approved"),
+                    where("onboardingComplete", "==", true)
                 )
                 const querySnapshot = await getDocs(q)
                 const fetchedProfiles = querySnapshot.docs.map(doc => ({

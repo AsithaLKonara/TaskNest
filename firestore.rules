@@ -17,14 +17,16 @@ service cloud.firestore {
     }
     
     match /freelancerProfiles/{userId} {
-      allow read: if resource.data.onboardingComplete == true || isAdmin() || (request.auth != null && request.auth.uid == userId);
+      // Allow reading if it's the user's own profile, or if it's an admin, or if it's onboarded
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin() || 
+                    (resource != null && resource.data.onboardingComplete == true);
       allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
     }
 
     // Transactions
     match /transactions/{transactionId} {
       allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if request.auth != null; // Ideally check if logic matches wallet-utils
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
@@ -38,7 +40,12 @@ service cloud.firestore {
     
     // Proposals
     match /proposals/{proposalId} {
-        allow read: if request.auth != null; 
+        // Allow freelancers to see their own, and clients to see proposals for their jobs
+        allow read: if request.auth != null && (
+          resource.data.freelancerId == request.auth.uid || 
+          get(/databases/$(database)/documents/jobs/$(resource.data.jobId)).data.clientId == request.auth.uid ||
+          isAdmin()
+        );
         allow create: if request.auth != null;
         allow update: if request.auth != null && (resource.data.freelancerId == request.auth.uid || isAdmin());
     }
@@ -65,7 +72,9 @@ service cloud.firestore {
     // Notifications
     match /notifications/{notificationId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow write: if isAdmin();
+      allow create: if request.auth != null; // Allow users to send notifications
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid; // Allow mark as read
+      allow delete: if isAdmin();
     }
   }
 }
