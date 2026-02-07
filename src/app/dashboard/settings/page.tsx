@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import { MFASetup } from "@/components/auth/mfa-setup"
 
 export default function SettingsPage() {
     const { user } = useAuth()
@@ -98,30 +99,42 @@ export default function SettingsPage() {
 
                 {/* Security Tab */}
                 <TabsContent value="security">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Password</CardTitle>
-                            <CardDescription>Change your password to keep your account secure.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleUpdatePassword} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>New Password</Label>
-                                    <Input
-                                        type="password"
-                                        placeholder="Min 6 characters"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        minLength={6}
-                                    />
-                                </div>
-                                <Button variant="destructive" disabled={loading || !newPassword}>
-                                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Update Password
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Two-Factor Authentication</CardTitle>
+                                <CardDescription>Add an extra layer of security to your account.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <MFASetup />
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Password</CardTitle>
+                                <CardDescription>Change your password to keep your account secure.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleUpdatePassword} className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label>New Password</Label>
+                                        <Input
+                                            type="password"
+                                            placeholder="Min 6 characters"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            minLength={6}
+                                        />
+                                    </div>
+                                    <Button variant="destructive" disabled={loading || !newPassword}>
+                                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Update Password
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </TabsContent>
 
                 {/* Notifications Tab */}

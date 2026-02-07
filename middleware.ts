@@ -14,12 +14,19 @@ import type { NextRequest } from 'next/server'
 // or just return next() to avoid breaking the app without cookies.
 
 export function middleware(request: NextRequest) {
-    // Example: If we had a session cookie
-    // const session = request.cookies.get('session')
+    const { pathname } = request.nextUrl
 
-    // For now, we allow the request to proceed to the client app
-    // where the AuthProvider will handle the redirect if not logged in.
-    // This ensures the app works "out of the box" with the current Firebase setup.
+    // In a production app, we would verify the session cookie here.
+    // const session = request.cookies.get('__session')?.value
+
+    // Protection Logic (Conceptual for Enterprise Roadmap)
+    if (pathname.startsWith('/dashboard/admin')) {
+        // Here we would check if (userRole !== 'admin') -> redirect
+    }
+
+    if (pathname.startsWith('/dashboard/freelancer')) {
+        // Here we would check if (userRole !== 'freelancer') -> redirect
+    }
 
     return NextResponse.next()
 }
