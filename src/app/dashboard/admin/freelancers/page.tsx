@@ -44,13 +44,16 @@ export default function AdminFreelancersPage() {
         setVerifying(true)
         try {
             const docRef = doc(db, "freelancerProfiles", selectedProfile.uid)
-            await updateDoc(docRef, { verified: true })
+            await updateDoc(docRef, {
+                verified: true,
+                kycStatus: 'verified'
+            })
 
             toast.success("Freelancer verified successfully")
 
             // Update local state
             setProfiles(prev => prev.map(p =>
-                p.uid === selectedProfile.uid ? { ...p, verified: true } : p
+                p.uid === selectedProfile.uid ? { ...p, verified: true, kycStatus: 'verified' } : p
             ))
             setSelectedProfile(null)
         } catch (error) {
@@ -61,14 +64,59 @@ export default function AdminFreelancersPage() {
         }
     }
 
+    const handleReject = async (reason: string) => {
+        if (!selectedProfile) return
+        setVerifying(true)
+        try {
+            const docRef = doc(db, "freelancerProfiles", selectedProfile.uid)
+            await updateDoc(docRef, {
+                kycStatus: 'rejected',
+                verified: false
+            })
+
+            toast.error(`Verification rejected: ${reason}`)
+
+            // Update local state
+            setProfiles(prev => prev.map(p =>
+                p.uid === selectedProfile.uid ? { ...p, kycStatus: 'rejected', verified: false } : p
+            ))
+            setSelectedProfile(null)
+        } catch (error) {
+            console.error("Error rejecting:", error)
+            toast.error("Action failed")
+        } finally {
+            setVerifying(false)
+        }
+    }
+
+    const updateVisibility = async (uid: string, level: 'normal' | 'limited' | 'hidden') => {
+        try {
+            const docRef = doc(db, "freelancerProfiles", uid)
+            await updateDoc(docRef, { visibility: level })
+            setProfiles(prev => prev.map(p => p.uid === uid ? { ...p, visibility: level } : p))
+            toast.success(`Visibility updated to ${level}`)
+        } catch (error) {
+            toast.error("Failed to update visibility")
+        }
+    }
+
     if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>
+
+    const getKycBadge = (status: string | undefined) => {
+        switch (status) {
+            case 'verified': return <Badge className="bg-green-600">Verified</Badge>
+            case 'pending': return <Badge variant="outline" className="bg-blue-50 text-blue-700 animate-pulse">Pending Review</Badge>
+            case 'rejected': return <Badge variant="destructive">Rejected</Badge>
+            default: return <Badge variant="outline">Unverified</Badge>
+        }
+    }
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Freelancer Verification</h1>
-                    <p className="text-sm md:text-base text-muted-foreground">Review and verify freelancer identities.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Freelancer Quality Control</h1>
+                    <p className="text-sm md:text-base text-muted-foreground">Manage verification and marketplace visibility (Shadow Controls).</p>
                 </div>
             </div>
 
@@ -76,10 +124,10 @@ export default function AdminFreelancersPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Title</TableHead>
+                            <TableHead>Freelancer</TableHead>
                             <TableHead>Hourly Rate</TableHead>
-                            <TableHead>NIC Status</TableHead>
-                            <TableHead>Verification</TableHead>
+                            <TableHead>KYC Status</TableHead>
+                            <TableHead>Visibility</TableHead>
                             <TableHead className="text-right">Action</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -89,29 +137,54 @@ export default function AdminFreelancersPage() {
                                 <TableCell className="font-medium">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{profile.name || "Unknown User"}</span>
-                                        <span className="text-sm">{profile.title || "Untitled"}</span>
-                                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">{profile.bio}</div>
+                                        <span className="text-sm text-muted-foreground">{profile.title || "Untitled"}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell>{profile.priceRange}</TableCell>
                                 <TableCell>
-                                    {profile.nicUrl ? (
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Uploaded</Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>
-                                    )}
+                                    {getKycBadge(profile.kycStatus)}
                                 </TableCell>
                                 <TableCell>
-                                    {profile.verified ? (
-                                        <Badge className="bg-blue-600 hover:bg-blue-700"><ShieldCheck className="w-3 h-3 mr-1" /> Verified</Badge>
+                                    {profile.visibility === 'normal' ? (
+                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 h-5 text-[10px]">Public</Badge>
+                                    ) : profile.visibility === 'limited' ? (
+                                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 h-5 text-[10px]">Limited</Badge>
                                     ) : (
-                                        <Badge variant="secondary">Unverified</Badge>
+                                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 h-5 text-[10px]">Hidden</Badge>
                                     )}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button size="sm" variant={profile.verified ? "outline" : "default"} onClick={() => setSelectedProfile(profile)}>
-                                        <Eye className="mr-2 h-3 w-3" /> {profile.verified ? "View" : "Review"}
-                                    </Button>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <div className="flex border rounded-md overflow-hidden h-7">
+                                            <Button
+                                                size="xs"
+                                                variant={profile.visibility === 'normal' ? 'default' : 'ghost'}
+                                                onClick={() => updateVisibility(profile.uid, 'normal')}
+                                                className="rounded-none px-2 text-[9px] h-full"
+                                            >
+                                                Norm
+                                            </Button>
+                                            <Button
+                                                size="xs"
+                                                variant={profile.visibility === 'limited' ? 'secondary' : 'ghost'}
+                                                onClick={() => updateVisibility(profile.uid, 'limited')}
+                                                className="rounded-none border-x px-2 text-[9px] h-full"
+                                            >
+                                                Limit
+                                            </Button>
+                                            <Button
+                                                size="xs"
+                                                variant={profile.visibility === 'hidden' ? 'destructive' : 'ghost'}
+                                                onClick={() => updateVisibility(profile.uid, 'hidden')}
+                                                className="rounded-none px-2 text-[9px] h-full"
+                                            >
+                                                Hide
+                                            </Button>
+                                        </div>
+                                        <Button size="sm" variant="outline" onClick={() => setSelectedProfile(profile)} className="h-7 px-2">
+                                            <Eye className="h-4 w-4 mr-1" /> Review
+                                        </Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -124,6 +197,7 @@ export default function AdminFreelancersPage() {
                 onClose={() => setSelectedProfile(null)}
                 profile={selectedProfile}
                 onVerify={handleVerify}
+                onReject={handleReject}
                 loading={verifying}
             />
         </div>

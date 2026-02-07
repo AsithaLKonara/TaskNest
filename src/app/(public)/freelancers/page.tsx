@@ -107,8 +107,20 @@ export default function FreelancersPage() {
                                     )}
                                 </div>
                                 <div className="flex items-center justify-between text-sm font-medium">
-                                    <span className="flex items-center"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500 mr-1" /> {profile.rating || "N/A"}</span>
-                                    <span>{profile.priceRange || "Negotiable"}</span>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="flex items-center"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500 mr-1" /> {profile.rating || "N/A"}</span>
+                                        {profile.metrics && (
+                                            <span className="text-[10px] text-muted-foreground">
+                                                {profile.metrics.successScore || 100}% Success • {profile.metrics.responseTimeAvg || 1}h response
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <span>{profile.priceRange || "Negotiable"}</span>
+                                        {(profile.rating >= 4.8 && (profile.metrics?.totalOrders || 0) >= 10) && (
+                                            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-200 text-[9px] py-0 h-4">Top Rated</Badge>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                             <CardFooter className="pt-2">

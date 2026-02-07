@@ -141,6 +141,38 @@ export default function FreelancerProfilePage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    <Card className="bg-primary/5 border-primary/20">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg">Performance</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Completion Rate</span>
+                                <span className="font-semibold">{profile.metrics?.completionRate || 100}%</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Response Time</span>
+                                <span className="font-semibold">~{profile.metrics?.responseTimeAvg || 1} hrs</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">Total Orders</span>
+                                <span className="font-semibold">{profile.metrics?.totalOrders || 0}</span>
+                            </div>
+                            <div className="pt-2 border-t mt-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-primary"
+                                            style={{ width: `${profile.metrics?.successScore || 100}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-bold">{profile.metrics?.successScore || 100}%</span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground mt-1">Platform Success Score</p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Main Content - Bio & Portfolio */}

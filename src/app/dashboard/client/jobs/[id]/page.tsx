@@ -5,22 +5,24 @@ import { useParams, useRouter } from "next/navigation"
 import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { createNotification } from "@/lib/notifications"
-import { Job, Proposal } from "@/types"
+import { Job, Proposal, FreelancerProfile } from "@/types"
+import { getSuggestedFreelancers } from "@/lib/match-logic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, DollarSign, Clock, CheckCircle, XCircle } from "lucide-react"
+import { Loader2, DollarSign, Clock, CheckCircle, Star, Sparkles, MapPin } from "lucide-react"
 import { toast } from "sonner"
-import { format } from "date-fns"
 import { formatSafeDate } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from "next/link"
 
 export default function ClientJobDetailsPage() {
     const params = useParams()
     const router = useRouter()
     const [job, setJob] = useState<Job | null>(null)
     const [proposals, setProposals] = useState<Proposal[]>([])
+    const [suggestions, setSuggestions] = useState<FreelancerProfile[]>([])
     const [loading, setLoading] = useState(true)
     const [processingId, setProcessingId] = useState<string | null>(null)
 
@@ -33,7 +35,8 @@ export default function ClientJobDetailsPage() {
                 const jobSnap = await getDoc(jobRef)
 
                 if (jobSnap.exists()) {
-                    setJob({ jobId: jobSnap.id, ...jobSnap.data() } as Job)
+                    const jobData = { jobId: jobSnap.id, ...jobSnap.data() } as Job
+                    setJob(jobData)
 
                     // Fetch Proposals
                     const q = query(
@@ -47,6 +50,13 @@ export default function ClientJobDetailsPage() {
                     })) as Proposal[]
 
                     setProposals(fetchedProposals)
+
+                    // NEW: Fetch Suggested Freelancers
+                    const profilesSnap = await getDocs(query(collection(db, "freelancerProfiles"), where("status", "==", "approved")))
+                    const allProfiles = profilesSnap.docs.map(doc => ({ uid: doc.id, ...doc.data() })) as FreelancerProfile[]
+
+                    const suggested = getSuggestedFreelancers(jobData.skills || [], allProfiles);
+                    setSuggestions(suggested)
                 }
             } catch (error) {
                 console.error("Error fetching data:", error)
@@ -132,6 +142,46 @@ export default function ClientJobDetailsPage() {
             </div>
 
             <Separator />
+
+            {/* Suggested Freelancers */}
+            {job.status === 'open' && suggestions.length > 0 && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-amber-500 fill-amber-50" />
+                        <h2 className="text-xl font-semibold">Suggested for this Job</h2>
+                    </div>
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        {suggestions.map((profile) => (
+                            <Card key={profile.uid} className="hover:shadow-md transition-shadow border-primary/10">
+                                <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                                    <Avatar className="h-10 w-10">
+                                        <AvatarImage src={profile.photoURL} />
+                                        <AvatarFallback>{profile.title?.[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="overflow-hidden">
+                                        <h3 className="font-semibold text-sm truncate">{profile.title}</h3>
+                                        <div className="flex items-center text-[10px] text-muted-foreground">
+                                            <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 mr-1" />
+                                            {profile.rating || 5.0} • {profile.metrics?.successScore || 100}% Success
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pb-3 text-xs text-muted-foreground line-clamp-2">
+                                    {profile.bio}
+                                </CardContent>
+                                <Separator className="opacity-50" />
+                                <CardFooter className="py-2">
+                                    <Button size="sm" variant="ghost" className="w-full text-xs gap-1" asChild>
+                                        <Link href={`/freelancers/${profile.uid}`}>
+                                            View Profile <Clock className="h-3 w-3" />
+                                        </Link>
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div>
                 <h2 className="text-xl font-semibold mb-4">Proposals ({proposals.length})</h2>
