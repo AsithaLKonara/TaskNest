@@ -16,6 +16,7 @@ import Link from "next/link"
 export default function MyJobsPage() {
     const { user } = useAuth()
     const [jobs, setJobs] = useState<Job[]>([])
+    const [counts, setCounts] = useState<Record<string, number>>({})
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -32,9 +33,19 @@ export default function MyJobsPage() {
                     ...doc.data()
                 })) as Job[]
 
-                // Manual sort if index missing for compound query
-                fetchedJobs.sort((a, b) => b.createdAt - a.createdAt)
+                // Manual sort
+                fetchedJobs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
                 setJobs(fetchedJobs)
+
+                // Fetch counts for each job
+                const countsMap: Record<string, number> = {}
+                await Promise.all(fetchedJobs.map(async (job) => {
+                    const pq = query(collection(db, "proposals"), where("jobId", "==", job.jobId))
+                    const psnap = await getDocs(pq)
+                    countsMap[job.jobId] = psnap.size
+                }))
+                setCounts(countsMap)
+
             } catch (error) {
                 console.error("Error fetching jobs:", error)
             } finally {
@@ -84,7 +95,7 @@ export default function MyJobsPage() {
                                     <TableCell className="font-medium">{job.title}</TableCell>
                                     <TableCell>{job.category}</TableCell>
                                     <TableCell>{formatSafeDate(job.createdAt)}</TableCell>
-                                    <TableCell>0</TableCell> {/* TODO: Count proposals */}
+                                    <TableCell>{counts[job.jobId] || 0}</TableCell>
                                     <TableCell>
                                         <Badge variant={
                                             job.status === "completed" ? "secondary" :

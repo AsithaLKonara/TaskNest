@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { increment, doc, updateDoc, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
 import { createNotification } from "@/lib/notifications"
 import { Job } from "@/types"
 import { Button } from "@/components/ui/button"
@@ -77,6 +77,13 @@ export function SubmitProposalDialog({ job }: SubmitProposalDialogProps) {
                 "info",
                 `/dashboard/client/jobs/${job.jobId}`
             )
+
+            // Update freelancer metrics
+            const freelancerRef = doc(db, "freelancerProfiles", user.uid)
+            await updateDoc(freelancerRef, {
+                "metrics.proposalsSentCount": increment(1),
+                "lastActiveAt": Date.now()
+            })
 
             toast.success("Proposal submitted successfully!")
             setOpen(false)

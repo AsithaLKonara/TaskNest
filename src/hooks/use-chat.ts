@@ -88,7 +88,6 @@ export function useChat() {
 
             await addDoc(collection(db, "chats", chatId, "messages"), messageData)
 
-            // 2. Update parent chat document with last message
             await updateDoc(doc(db, "chats", chatId), {
                 lastMessage: {
                     text: text.trim(),
@@ -97,6 +96,15 @@ export function useChat() {
                 },
                 updatedAt: Date.now()
             })
+
+            // 3. Update lastActiveAt if sender is a freelancer
+            // We can check the freelancerProfiles collection for this UID
+            // For efficiency, we just try to update. If it fails (not a freelancer), it's fine.
+            try {
+                await updateDoc(doc(db, "freelancerProfiles", user.uid), {
+                    lastActiveAt: Date.now()
+                })
+            } catch (e) { /* ignore if not a freelancer */ }
 
         } catch (error) {
             console.error("Error sending message:", error)
