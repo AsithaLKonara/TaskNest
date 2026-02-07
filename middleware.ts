@@ -13,19 +13,41 @@ import type { NextRequest } from 'next/server'
 // and use this file to protect against obvious route mismatches if possible, 
 // or just return next() to avoid breaking the app without cookies.
 
-export function middleware(request: NextRequest) {
+import { globalRateLimit, sensitiveRateLimit } from '@/lib/ratelimit'
+
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
 
-    // In a production app, we would verify the session cookie here.
-    // const session = request.cookies.get('__session')?.value
+    // Identifer for Rate Limiting (IP-based)
+    const ip = (request as any).ip || request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for') || '127.0.0.1'
+    const identifier = ip.split(',')[0].trim()
 
-    // Protection Logic (Conceptual for Enterprise Roadmap)
-    if (pathname.startsWith('/dashboard/admin')) {
-        // Here we would check if (userRole !== 'admin') -> redirect
+    // 1. Specialized Sensitive Route Protection
+    if (pathname.startsWith('/api/payments') || pathname.startsWith('/api/auth/mfa')) {
+        const { success, limit, reset, remaining } = await sensitiveRateLimit.limit(identifier)
+        if (!success) {
+            return new NextResponse('Too many sensitive requests. Please wait 60s.', {
+                status: 429,
+                headers: {
+                    'X-RateLimit-Limit': limit.toString(),
+                    'X-RateLimit-Remaining': remaining.toString(),
+                    'X-RateLimit-Reset': reset.toString(),
+                },
+            })
+        }
     }
 
-    if (pathname.startsWith('/dashboard/freelancer')) {
-        // Here we would check if (userRole !== 'freelancer') -> redirect
+    // 2. Global Rate Limiting
+    const { success, limit, reset, remaining } = await globalRateLimit.limit(identifier)
+    if (!success) {
+        return new NextResponse('Global rate limit exceeded.', {
+            status: 429,
+            headers: {
+                'X-RateLimit-Limit': limit.toString(),
+                'X-RateLimit-Remaining': remaining.toString(),
+                'X-RateLimit-Reset': reset.toString(),
+            },
+        })
     }
 
     return NextResponse.next()
