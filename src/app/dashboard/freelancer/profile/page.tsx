@@ -25,11 +25,15 @@ const profileSchema = z.object({
     skills: z.array(z.string()).min(1, "Add at least one skill"),
     portfolio: z.array(z.string()).optional(),
     availability: z.boolean().optional(),
-    nicUrl: z.string().optional(),
+    kycDocuments: z.array(z.object({
+        type: z.enum(['nic', 'passport', 'driving_license']),
+        url: z.string(),
+        submittedAt: z.number()
+    })).optional(),
 })
 
 export default function ProfilePage() {
-    const { user } = useAuth()
+    const { user, profile } = useAuth()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
 
@@ -42,7 +46,7 @@ export default function ProfilePage() {
             skills: [],
             portfolio: [],
             availability: true,
-            nicUrl: "",
+            kycDocuments: [],
         },
     })
 
@@ -61,8 +65,8 @@ export default function ProfilePage() {
                         skills: data.skills || [],
                         portfolio: data.portfolio || [],
                         availability: data.availability === 'full-time',
-                        nicUrl: data.nicUrl || ""
-                    })
+                        kycDocuments: data.kycDocuments || [],
+                    } as any)
                 }
             } catch (error) {
                 console.error("Error fetching profile:", error)
@@ -77,6 +81,7 @@ export default function ProfilePage() {
         if (!user) return
         setSaving(true)
         try {
+            const currentKycs = form.getValues('kycDocuments') || [];
             const profileData = {
                 uid: user.uid,
                 name: user.displayName,
@@ -86,8 +91,9 @@ export default function ProfilePage() {
                 skills: values.skills,
                 portfolio: values.portfolio || [],
                 availability: values.availability ? 'full-time' : 'part-time',
-                nicUrl: values.nicUrl,
-                status: 'approved', // Or keep current? For testing, let's auto-approve or handle in admin
+                kycDocuments: values.kycDocuments || [],
+                kycStatus: currentKycs.length > 0 ? (profile?.kycStatus === 'verified' ? 'verified' : 'pending') : 'unverified',
+                verified: profile?.kycStatus === 'verified',
             }
 
             await setDoc(doc(db, "freelancerProfiles", user.uid), profileData, { merge: true })
@@ -104,6 +110,8 @@ export default function ProfilePage() {
         return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin" /></div>
     }
 
+    const kycStatus = profile?.kycStatus || 'unverified';
+
     return (
         <div className="max-w-4xl mx-auto py-4 md:py-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -118,6 +126,28 @@ export default function ProfilePage() {
                     </Button>
                 </div>
             </div>
+
+            {/* KYC Status Alert */}
+            {kycStatus === 'unverified' && (
+                <div className="mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800 flex items-center justify-between">
+                    <div>
+                        <h4 className="font-semibold">Identity Verification Required</h4>
+                        <p className="text-sm">Please upload your ID documents below to access all platform features.</p>
+                    </div>
+                </div>
+            )}
+            {kycStatus === 'pending' && (
+                <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
+                    <h4 className="font-semibold">Verification Pending</h4>
+                    <p className="text-sm">Our admins are currently reviewing your documents. This usually takes 24-48 hours.</p>
+                </div>
+            )}
+            {kycStatus === 'verified' && (
+                <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800">
+                    <h4 className="font-semibold">Verified Freelancer</h4>
+                    <p className="text-sm">Your identity has been verified. You now have the "Verified" badge on your profile.</p>
+                </div>
+            )}
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -209,7 +239,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="grid gap-6 border p-4 md:p-6 rounded-xl bg-card shadow-sm transition-all hover:shadow-md">
-                        <h2 className="text-xl font-semibold">Portfolio & Verification</h2>
+                        <h2 className="text-xl font-semibold">Portfolio & Identity</h2>
                         <FormField
                             control={form.control}
                             name="portfolio"
@@ -230,23 +260,30 @@ export default function ProfilePage() {
 
                         <FormField
                             control={form.control}
-                            name="nicUrl"
+                            name="kycDocuments"
                             render={({ field }) => (
                                 <FormItem>
                                     <div className="flex items-center gap-2">
                                         <FormLabel>NIC / ID Verification</FormLabel>
-                                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Private</span>
+                                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">Securely Stored</span>
                                     </div>
                                     <FormControl>
                                         <FileUpload
-                                            value={field.value ? [field.value] : []}
-                                            onChange={(urls) => field.onChange(urls[0] || "")}
-                                            folder="nic"
+                                            value={field.value?.map(d => d.url) || []}
+                                            onChange={(urls) => {
+                                                const newDocs = urls.map(url => ({
+                                                    type: 'nic' as const,
+                                                    url,
+                                                    submittedAt: Date.now()
+                                                }));
+                                                field.onChange(newDocs);
+                                            }}
+                                            folder="kyc"
                                             maxFiles={1}
-                                            label="Upload NIC"
+                                            label="Upload ID Document"
                                         />
                                     </FormControl>
-                                    <FormDescription>Upload a clear photo of your National ID.</FormDescription>
+                                    <FormDescription>Upload a clear photo of your National ID or Passport.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -256,7 +293,7 @@ export default function ProfilePage() {
                     <div className="flex justify-end pb-10">
                         <Button type="submit" size="lg" disabled={saving}>
                             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Logic
+                            Save Profile
                         </Button>
                     </div>
                 </form>
