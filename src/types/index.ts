@@ -7,6 +7,36 @@ export interface User {
     photoURL?: string;
     role: UserRole;
     createdAt: number; // Timestamp
+    stripeCustomerId?: string; // Legacy/Optional
+    payhereCustomerId?: string; // Added for PayHere
+    wallet?: Wallet; // Add internal wallet
+    kycStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+    verified?: boolean;
+    clientMetrics?: {
+        trustScore: number;
+        totalSpent: number;
+        cancelledByClient: number;
+        disputeCount: number;
+    }
+}
+
+export interface Wallet {
+    availableBalance: number;
+    lockedBalance: number; // Escrow funds
+    currency: string;
+    lastUpdated: number;
+}
+
+export interface Transaction {
+    transactionId: string;
+    userId: string;
+    orderId?: string;
+    amount: number;
+    type: 'deposit' | 'withdrawal' | 'escrow_hold' | 'escrow_release' | 'refund';
+    status: 'pending' | 'completed' | 'failed';
+    gateway?: 'payhere' | 'manual' | 'stripe';
+    reference?: string; // Gateway ref
+    createdAt: number;
 }
 
 export interface FreelancerProfile {
@@ -18,14 +48,41 @@ export interface FreelancerProfile {
     languages: string[];
     priceRange: string; // e.g. "$10-$30/hr"
     verified: boolean;
-    status?: 'pending' | 'approved' | 'suspended';
-    available?: boolean; // New toggle
+    status: 'pending' | 'approved' | 'suspended';
+    kycStatus: 'unverified' | 'pending' | 'verified' | 'rejected';
+    kycDocuments?: {
+        type: 'nic' | 'passport' | 'driving_license';
+        url: string;
+        submittedAt: number;
+    }[];
+    visibility: 'normal' | 'limited' | 'hidden';
+    lastActiveAt?: number;
+    lastOrderCompletedAt?: number;
+    available?: boolean;
     portfolio: string[]; // URLs
     nicUrl?: string;
     photoURL?: string;
-    availability: 'full-time' | 'part-time'; // keeping existing for display, maybe merge later
+    stripeAccountId?: string; // Legacy
+    payhereMerchantId?: string; // Optional
+    payoutDetails?: {
+        method: 'bank_transfer' | 'payoneer' | 'manual';
+        accountNumber?: string; // Hashed/masked in UI
+        bankName?: string;
+        accountName?: string;
+    };
+    onboardingComplete?: boolean;
+    availability: 'full-time' | 'part-time';
     rating: number;
     reviewCount: number;
+    metrics?: {
+        completionRate: number;
+        responseTimeAvg: number;
+        totalOrders: number;
+        disputeCount: number;
+        successScore?: number;
+        proposalAcceptanceRate?: number;
+        proposalsSentCount?: number;
+    };
 }
 
 export type JobStatus = 'open' | 'in-progress' | 'completed' | 'expired';
@@ -33,13 +90,13 @@ export type JobStatus = 'open' | 'in-progress' | 'completed' | 'expired';
 export interface Job {
     jobId: string;
     clientId: string;
-    clientName?: string; // Denormalized for easier display
+    clientName?: string;
     title: string;
     description: string;
     category: string;
     budget: number;
-    deadline: number; // Timestamp or date string
-    skills?: string[]; // Added for searching
+    deadline: number;
+    skills?: string[];
     status: JobStatus;
     createdAt: number;
 }
@@ -59,7 +116,7 @@ export interface Proposal {
     createdAt: number;
 }
 
-export type OrderStatus = 'awaiting_payment' | 'active' | 'delivered' | 'revision_requested' | 'completed' | 'cancelled';
+export type OrderStatus = 'awaiting_payment' | 'active' | 'delivered' | 'revision_requested' | 'completed' | 'cancelled' | 'disputed' | 'on_hold';
 
 export interface Order {
     orderId: string;
@@ -68,10 +125,24 @@ export interface Order {
     freelancerId: string;
     price: number;
     status: OrderStatus;
-    paymentProofUrl?: string; // For manual bank transfer verification
-    deliveryUrl?: string;
-    deliveryComment?: string;
+    escrowStatus: 'none' | 'held' | 'released' | 'refunded'; // Added for internal escrow
+    paymentProofUrl?: string;
+    payherePaymentId?: string; // Added for PayHere
+    deliverables?: {
+        version: number;
+        url: string;
+        comment?: string;
+        submittedAt: number;
+        status: 'pending' | 'approved' | 'revision_requested';
+    }[];
+    currentRevision: number;
+    maxRevisions: number;
+    chatId?: string; // Link to messaging
     createdAt: number;
+    firstResponseAt?: number;
+    cancelledBy?: 'client' | 'freelancer' | 'admin';
+    disputeReason?: string;
+    mediationResult?: string;
 }
 
 export interface Message {
